@@ -1,0 +1,62 @@
+{
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/worker.production.js",
+  "description": "Serverless GraphQL registry",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "webpack",
+    "deploy": "NODE_ENV=production wrangler publish",
+    "test": "npm run unit",
+    "unit": "ava src/**/*.test.ts",
+    "watch": "npm run unit -- --watch",
+    "cov": "nyc --reporter=lcov --reporter=text-summary -- npm run unit",
+    "format": "prettier --write '**/*.{js,ts,json,md}'",
+    "types": "tsc --noEmit",
+    "release": "release-it --no-npm --github.release"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/worker.production.js"
+  ],
+  "ava": {
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "nodeArguments": []
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^2.2.2",
+    "@cloudflare/wrangler": "^1.18.0",
+    "ava": "^3.15.0",
+    "nyc": "^15.1.0",
+    "prettier": "^2.3.2",
+    "release-it": "^14.10.1",
+    "rimraf": "^3.0.2",
+    "ts-loader": "^9.2.4",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5",
+    "webpack": "^5.47.0",
+    "webpack-cli": "^4.7.2"
+  },
+  "dependencies": {
+    "@graphql-inspector/core": "^2.6.1",
+    "graphql": "^15.5.1",
+    "worktop": "^0.7.1"
+  },
+  "keywords": [
+    "serviceworker",
+    "cloudflare",
+    "graphql",
+    "registry",
+    "cache",
+    "schema",
+    "federation"
+  ]
+}

@@ -1,0 +1,26 @@
+name = "graphcdn"
+type = "javascript"
+
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+target_type = "javascript"
+
+kv_namespaces = [ 
+         { binding = "QUERY_CACHE", id = "<id>", preview_id = "<id>" }
+]
+
+[vars]
+GRAPHQL_URL = ""
+DEFAULT_TTL = "60"
+
+[dev]
+ip = "0.0.0.0"
+port = 9000
+local_protocol="http"
+upstream_protocol="https"
+
+[build]
+upload.format = "service-worker"
+command = "npm run build"

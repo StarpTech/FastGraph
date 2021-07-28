@@ -1,0 +1,34 @@
+import * as DB from 'worktop/kv'
+import type { KV } from 'worktop/kv'
+
+// cloudflare global kv binding
+declare const QUERY_CACHE: KV.Namespace
+
+export interface CachedQuery {
+  data: unknown
+}
+
+export const key_item = (uid: string) => `query-cache::${uid}`
+
+export function find(uid: string) {
+  const key = key_item(uid)
+  return DB.read<string>(QUERY_CACHE, key, "text")
+}
+
+export function remove(pqKey: string) {
+  const key = key_item(pqKey)
+  return DB.remove(QUERY_CACHE, key)
+}
+
+export function save(
+  uid: string,
+  result: string,
+  expiration?: { ttl?: number; expiration?: number },
+) {
+  const key = key_item(uid)
+
+  return DB.write(QUERY_CACHE, key, result, {
+    expirationTtl: expiration?.ttl,
+    expiration: expiration?.expiration,
+  })
+}
