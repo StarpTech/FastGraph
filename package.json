@@ -2,7 +2,7 @@
   "private": true,
   "version": "0.0.0",
   "main": "dist/worker.production.js",
-  "description": "Serverless GraphQL registry",
+  "description": "graphcdn",
   "license": "MIT",
   "scripts": {
     "dev": "wrangler dev",
@@ -54,9 +54,8 @@
     "serviceworker",
     "cloudflare",
     "graphql",
-    "registry",
-    "cache",
-    "schema",
-    "federation"
+    "performance",
+    "cdn",
+    "cache"
   ]
 }
