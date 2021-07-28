@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.png" alt="GraphCDN" />
+  <img src="logo.png" alt="graphcdn" />
 </div>
 
 <br/>
@@ -39,6 +39,10 @@ Set the `GRAPHQL_URL` variable in your `wrangler.toml`. It must point to your Gr
 All data is stored in the Key-value Store of cloudflare. Cloudflare KV is eventually-consistent and was designed for high-read low-latency use-cases. All data is encrypted at rest with 256-bit AES-GCM.
 
 Check [How KV works](https://developers.cloudflare.com/workers/learning/how-kv-works) to learn more about it.
+
+## Pricing
+
+You can use the [free tier](https://developers.cloudflare.com/workers/platform/limits#worker-limits).
 
 ## Development & Deployment
 
