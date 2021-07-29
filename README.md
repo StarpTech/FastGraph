@@ -47,7 +47,7 @@ Cache GraphQL requests from [Deutsche Bahn](https://bahnql.herokuapp.com/graphql
 
 ## Configuration
 
-Set the `GRAPHQL_URL` variable in your `wrangler.toml`. It must point to your GraphQL endpoint.
+Set the `GRAPHQL_URL=https://bahnql.herokuapp.com/graphql` variable in your `wrangler.toml`. It must point to your GraphQL endpoint.
 
 ## Performance & Security
 
