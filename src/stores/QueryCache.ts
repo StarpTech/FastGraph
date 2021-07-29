@@ -26,10 +26,12 @@ export function remove(pqKey: string) {
 export function save(uid: string, result: string, expirationTtl: number) {
   const key = key_item(uid)
 
+  expirationTtl = expirationTtl < 60 ? 60 : expirationTtl
+
   return DB.write(QUERY_CACHE, key, result, {
     expirationTtl,
     metadata: {
-      expiredAtInSec: Date.now() / 1000 + expirationTtl,
+      createdAt: Date.now(),
       expirationTtl,
     },
   })

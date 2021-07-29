@@ -4,6 +4,6 @@ import { graphql } from './routes/graphql'
 
 const API = new Router()
 
-API.add('POST', '/graphql', graphql)
+API.add('POST', '/', graphql)
 
 listen(API.run)

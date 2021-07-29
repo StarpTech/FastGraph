@@ -44,7 +44,7 @@ export const isMutation = (document: string): boolean => {
 }
 
 export const isResponseCacheable = (res: Response): boolean => {
-  return !!res.headers.get(Headers.setCookie) && res.status === 200
+  return res.headers.get(Headers.setCookie) === null && res.status === 200
 }
 
 export const parseMaxAge = (header: string): number => {
@@ -93,6 +93,7 @@ export const graphql: Handler = async function (req, res) {
    */
   if (queryHash) {
     const { value, metadata } = await find(queryHash)
+
     if (value) {
       const headers: Record<string, string> = {
         [Headers.gcdnCache]: CacheHitHeader.HIT,
@@ -102,10 +103,10 @@ export const graphql: Handler = async function (req, res) {
         headers[
           Headers.cacheControl
         ] = `public, max-age=${metadata.expirationTtl}, stale-while-revalidate=${metadata.expirationTtl}`
-        headers[Headers.age] = (
-          Date.now() / 1000 -
-          metadata.expiredAtInSec
-        ).toString()
+
+        const age = Math.round((Date.now() - metadata.createdAt) / 1000)
+        headers[Headers.age] =
+          age > metadata.expirationTtl ? metadata.expirationTtl : age
       }
 
       return res.send(200, value, {
@@ -140,9 +141,11 @@ export const graphql: Handler = async function (req, res) {
         maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
       }
 
-      save(queryHash, results, maxAge).catch((error) =>
-        console.error('query could not be stored in cache', error),
-      )
+      const result = await save(queryHash, results, maxAge)
+
+      if (!result) {
+        console.error('query could not be stored in cache')
+      }
 
       const headers = {
         [Headers.gcdnCache]: CacheHitHeader.PASS,
