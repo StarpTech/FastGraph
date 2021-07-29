@@ -33,6 +33,18 @@ wrangler kv:namespace create "QUERY_CACHE"
 npm run deploy
 ```
 
+## Example
+
+```sh
+curl --request POST \
+  --url https://graphcdn.starptech.workers.dev/ \
+  --header 'Accept-Encoding: gzip, deflate, br' \
+  --header 'Content-Type: application/json' \
+  --data '{"query":"{\n  stationWithEvaId(evaId: 8000105) {\n    name\n    location {\n      latitude\n      longitude\n    }\n    picture {\n      url\n    }\n  }\n}"}'
+```
+
+Cache GraphQL requests from [Deutsche Bahn](https://bahnql.herokuapp.com/graphql). Before `~900ms` after `~35ms`.
+
 ## Configuration
 
 Set the `GRAPHQL_URL` variable in your `wrangler.toml`. It must point to your GraphQL endpoint.

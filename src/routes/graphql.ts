@@ -77,7 +77,7 @@ export const graphql: Handler = async function (req, res) {
       return res.send(400, error, {
         ...defaultResponseHeaders,
         ...{
-          [Headers.gcdnCache]: CacheHitHeader.HIT,
+          [Headers.gcdnCache]: CacheHitHeader.ERROR,
           [Headers.xCache]: CacheHitHeader.HIT,
         },
       })
@@ -194,7 +194,9 @@ export const graphql: Handler = async function (req, res) {
   // We only understand JSON
   return res.send(
     415,
-    { error: `Unsupported content-type "${contentType}" from origin.` },
+    {
+      error: `Unsupported content-type "${contentType}" from origin "${origin}".`
+    },
     {
       ...defaultResponseHeaders,
       [Headers.gcdnCache]: CacheHitHeader.PASS,
