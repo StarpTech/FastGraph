@@ -13,7 +13,7 @@
 
 ## Caching semantics
 
-Requests are cached by default with a TTL of 60 seconds. You can set a custom TTL per request. You only need to respond with a `Cache-Control: max-age: 600` header. Mutations aren't cached.
+Requests are cached by default with a TTL of 60 seconds. You can set a custom TTL per request. You only need to respond with a `Cache-Control: max-age: 600` header from your origin. Mutations aren't cached.
 
 ## Getting Started
 
