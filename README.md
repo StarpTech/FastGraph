@@ -51,7 +51,7 @@ Set the variables in your `wrangler.toml`.
 
 - `GRAPHQL_URL`. The GraphQL endpoint.
 - `DEFAULT_TTL`. The default TTL (minimum 60s) of cacheable responses.
-- `PRIVATE_TYPES`. The GraphQL types that indicates a private response. Your server must respond with `Cache-Control: Private` to enable caching. The _Authorization_ header is part of the cache key. In order to use this feature, you also need to push your latest schema to the _GRAPHQL_SCHEMA_ KV with the key _graphql-schema::latest_.
+- `PRIVATE_TYPES`. The GraphQL types that indicates a private response. Your server must respond with `Cache-Control: Private` to enable caching. The _Authorization_ header is part of the cache key. In order to use this feature, you also need to push your latest schema to the KV `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`.
 
 ## Performance & Security
 
