@@ -5,16 +5,17 @@ import type { KV } from 'worktop/kv'
 declare const QUERY_CACHE: KV.Namespace
 
 export interface CachedQuery {
-  data: unknown
+  headers: Record<string, string>
+  body: string
 }
 
 export const key_item = (uid: string) => `query-cache::${uid}`
 
 export function find(uid: string) {
   const key = key_item(uid)
-  return DB.read<string>(QUERY_CACHE, key, {
+  return DB.read<CachedQuery>(QUERY_CACHE, key, {
     metadata: true,
-    type: 'text',
+    type: 'json',
   })
 }
 
@@ -23,13 +24,14 @@ export function remove(pqKey: string) {
   return DB.remove(QUERY_CACHE, key)
 }
 
-export function save(uid: string, result: string, expirationTtl: number) {
+export function save(uid: string, result: CachedQuery, expirationTtl: number) {
   const key = key_item(uid)
 
   expirationTtl = expirationTtl < 60 ? 60 : expirationTtl
 
   return DB.write(QUERY_CACHE, key, result, {
     expirationTtl,
+    toJSON: true,
     metadata: {
       createdAt: Date.now(),
       expirationTtl,

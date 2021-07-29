@@ -1,5 +1,6 @@
 import { parse } from 'graphql'
 import type { Handler } from 'worktop'
+import { isCacheable as isResponseCachable } from 'worktop/cache'
 import { SHA256 } from 'worktop/crypto'
 import { find, save } from '../stores/QueryCache'
 
@@ -43,10 +44,6 @@ export const isMutation = (document: string): boolean => {
   )
 }
 
-export const isResponseCacheable = (res: Response): boolean => {
-  return res.headers.get(Headers.setCookie) === null && res.status === 200
-}
-
 export const parseMaxAge = (header: string): number => {
   const matches = header.match(/max-age=(\d+)/)
   return matches ? parseInt(matches[1]) : -1
@@ -77,13 +74,12 @@ export const graphql: Handler = async function (req, res) {
       console.log('Query hash: ' + queryHash)
       console.log('IsIdempotent', isIdempotent)
     } catch (error) {
-      const headers: Record<string, string> = {
-        [Headers.gcdnCache]: CacheHitHeader.HIT,
-        [Headers.xCache]: CacheHitHeader.HIT,
-      }
       return res.send(400, error, {
         ...defaultResponseHeaders,
-        ...headers,
+        ...{
+          [Headers.gcdnCache]: CacheHitHeader.HIT,
+          [Headers.xCache]: CacheHitHeader.HIT,
+        },
       })
     }
   }
@@ -95,24 +91,30 @@ export const graphql: Handler = async function (req, res) {
     const { value, metadata } = await find(queryHash)
 
     if (value) {
-      const headers: Record<string, string> = {
-        [Headers.gcdnCache]: CacheHitHeader.HIT,
-        [Headers.xCache]: CacheHitHeader.HIT,
-      }
+      const res = new Response(value.body, {
+        headers: {
+          ...value.headers,
+          ...defaultResponseHeaders,
+        },
+      })
+
       if (metadata) {
-        headers[
-          Headers.cacheControl
-        ] = `public, max-age=${metadata.expirationTtl}, stale-while-revalidate=${metadata.expirationTtl}`
+        res.headers.set(
+          Headers.cacheControl,
+          `public, max-age=${metadata.expirationTtl}, stale-while-revalidate=${metadata.expirationTtl}`,
+        )
 
         const age = Math.round((Date.now() - metadata.createdAt) / 1000)
-        headers[Headers.age] =
-          age > metadata.expirationTtl ? metadata.expirationTtl : age
+        res.headers.set(
+          Headers.age,
+          age > metadata.expirationTtl ? metadata.expirationTtl : age,
+        )
       }
 
-      return res.send(200, value, {
-        ...defaultResponseHeaders,
-        ...headers,
-      })
+      res.headers.set(Headers.gcdnCache, CacheHitHeader.HIT)
+      res.headers.set(Headers.xCache, CacheHitHeader.HIT)
+
+      return res
     }
   }
 
@@ -126,7 +128,7 @@ export const graphql: Handler = async function (req, res) {
    */
   const response = await fetch(origin, init)
 
-  const isCacheable = isIdempotent && queryHash && isResponseCacheable(response)
+  const isCacheable = isIdempotent && queryHash && isResponseCachable(response)
   const contentType = response.headers.get(Headers.contentType)
 
   if (contentType?.includes('application/json')) {
@@ -141,25 +143,41 @@ export const graphql: Handler = async function (req, res) {
         maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
       }
 
-      const result = await save(queryHash, results, maxAge)
+      const res = new Response(results, {
+        ...response,
+        headers: {
+          ...response.headers,
+          ...defaultResponseHeaders,
+        },
+      })
+
+      if (res.headers.has('Set-Cookie')) {
+        res.headers.append('Cache-Control', 'private=Set-Cookie')
+      }
+
+      const serializableHeaders: Record<string, string> = {}
+      res.headers.forEach((val, key) => (serializableHeaders[key] = val))
+
+      const result = await save(
+        queryHash,
+        {
+          headers: serializableHeaders,
+          body: results,
+        },
+        maxAge,
+      )
 
       if (!result) {
         console.error('query could not be stored in cache')
       }
 
-      const headers = {
-        [Headers.gcdnCache]: CacheHitHeader.PASS,
-        [Headers.cacheControl]: `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
-      }
+      res.headers.set(Headers.gcdnCache, CacheHitHeader.PASS)
+      res.headers.set(
+        Headers.cacheControl,
+        `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
+      )
 
-      return new Response(results, {
-        ...response,
-        headers: {
-          ...response.headers,
-          ...defaultResponseHeaders,
-          ...headers,
-        },
-      })
+      return res
     }
 
     // First call or mutation requests
