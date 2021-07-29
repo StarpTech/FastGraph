@@ -8,15 +8,15 @@
 
 ## Features
 
-* Cache GraphQL queries
-* Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
-* Set appropriate cache headers `age`, `x-cache`, `cache-control`
-* Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
-* [ ] Smart GraphQL cache invalidation
+- Cache POST GraphQL queries
+- Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
+- Set appropriate cache headers `age`, `x-cache`, `cache-control`
+- Cache authenticated data by types selection
+- Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
 
 ## Caching semantics
 
-Requests are cached by default with a TTL of 60 seconds. You can set a custom TTL per request. You only need to respond with a `Cache-Control: max-age: 600` header from your origin. Mutations aren't cached.
+Requests are cached by default with a TTL of 900 seconds. You can set a custom TTL per request. You only need to respond with a `Cache-Control: max-age: 600` header from your origin. Mutations aren't cached.
 
 ## Getting Started
 
@@ -47,7 +47,11 @@ Cache GraphQL requests from [Deutsche Bahn](https://bahnql.herokuapp.com/graphql
 
 ## Configuration
 
-Set the `GRAPHQL_URL=https://bahnql.herokuapp.com/graphql` variable in your `wrangler.toml`. It must point to your GraphQL endpoint.
+Set the variables in your `wrangler.toml`.
+
+- `GRAPHQL_URL`. The GraphQL endpoint.
+- `DEFAULT_TTL`. The default TTL (minimum 60s) of cacheable responses.
+- `PRIVATE_TYPES`. The GraphQL types that indicates a private cacheable response. The `Authorization` header is part of the cache key. In order to use this feature, you also need to push your latest schema to the `GRAPHQL_SCHEMA` KV with the key `graphql-schema::latest`.
 
 ## Performance & Security
 

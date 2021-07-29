@@ -8,12 +8,14 @@ zone_id = ""
 target_type = "javascript"
 
 kv_namespaces = [ 
-         { binding = "QUERY_CACHE", id = "<id>", preview_id = "<id>" }
+         { binding = "QUERY_CACHE", id = "<id>", preview_id = "<id>" },
+         { binding = "GRAPHQL_SCHEMA", id = "<id>", preview_id = "<id>" }
 ]
 
 [vars]
 GRAPHQL_URL = ""
-DEFAULT_TTL = "60"
+DEFAULT_TTL = "900"
+PRIVATE_TYPES = ""
 
 [dev]
 ip = "0.0.0.0"

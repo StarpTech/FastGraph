@@ -46,7 +46,6 @@
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "@graphql-inspector/core": "^2.6.1",
     "graphql": "^15.5.1",
     "worktop": "^0.7.1"
   },

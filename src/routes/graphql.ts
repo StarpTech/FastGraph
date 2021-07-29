@@ -1,58 +1,38 @@
-import { parse } from 'graphql'
 import type { Handler } from 'worktop'
-import { isCacheable as isResponseCachable } from 'worktop/cache'
 import { SHA256 } from 'worktop/crypto'
+import {
+  normalizeDocument,
+  isMutation,
+  hasIntersectedTypes,
+} from '../graphql-utils'
+import {
+  Headers,
+  CacheHitHeader,
+  isResponseCachable,
+  parseMaxAge
+} from '../utils'
 import { find, save } from '../stores/QueryCache'
+import { latest } from '../stores/Schema'
+import { parse } from 'graphql'
 
 declare const GRAPHQL_URL: string
 declare const DEFAULT_TTL: string
-
-enum Headers {
-  gcdnCache = 'gcdn-cache',
-  setCookie = 'set-cookie',
-  contentType = 'content-type',
-  cacheControl = 'cache-control',
-  date = 'date',
-  age = 'age',
-  xCache = 'x-cache',
-
-  // CORS
-  accessControlAllowCredentials = 'access-control-allow-credentials',
-  accessControlAllowHeaders = 'access-control-allow-headers',
-  accessControlAllowMethods = 'access-control-allow-methods',
-  accessControlAllowOrigin = 'access-control-allow-origin',
-  accessControlExposeHeaders = 'access-control-expose-headers',
-  accessControlMaxAge = 'access-control-max-age',
-}
-
-enum CacheHitHeader {
-  MISS = 'MISS',
-  HIT = 'HIT',
-  PASS = 'PASS',
-  ERROR = 'ERROR',
-}
+declare const PRIVATE_TYPES: string
 
 const origin = GRAPHQL_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
-
-export const isMutation = (document: string): boolean => {
-  const node = parse(document)
-  return node.definitions.some(
-    (definition) =>
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'mutation',
-  )
-}
-
-export const parseMaxAge = (header: string): number => {
-  const matches = header.match(/max-age=(\d+)/)
-  return matches ? parseInt(matches[1]) : -1
-}
+const privateTypes = PRIVATE_TYPES.split(',')
 
 export const graphql: Handler = async function (req, res) {
   const originalBody = await req.body.json()
-  let queryHash = undefined
-  let isIdempotent = false
+
+  if (!originalBody.query) {
+    return res.send(400, {
+      error: 'Request has no "query" field.',
+    })
+  }
+
+  let isMutationRequest = false
 
   const defaultResponseHeaders: Record<string, string> = {
     [Headers.contentType]: 'application/json',
@@ -62,17 +42,15 @@ export const graphql: Handler = async function (req, res) {
     [Headers.gcdnCache]: CacheHitHeader.MISS,
   }
 
-  if (originalBody.query) {
-    queryHash = await SHA256(originalBody.query)
+  const queryDocumentNode = parse(originalBody.query, { noLocation: true })
 
+  if (originalBody.query) {
     /**
      * Check if we received a query or mutation.
      * Parsing the query can throw.
      */
     try {
-      isIdempotent = !isMutation(originalBody.query)
-      console.log('Query hash: ' + queryHash)
-      console.log('IsIdempotent', isIdempotent)
+      isMutationRequest = isMutation(queryDocumentNode)
     } catch (error) {
       return res.send(400, error, {
         ...defaultResponseHeaders,
@@ -84,11 +62,38 @@ export const graphql: Handler = async function (req, res) {
     }
   }
 
+  const schema = await latest()
+  let hasPrivateTypes = false
+
+  if (schema && privateTypes.length > 0) {
+    hasPrivateTypes = hasIntersectedTypes(
+      schema,
+      queryDocumentNode,
+      privateTypes,
+    )
+  }
+
+  const content = normalizeDocument(originalBody.query)
+
+  const authHeader = req.headers.get(Headers.authorization) || ''
+
+  let querySignature = ''
+
+  /**
+   *  In case of the query will return user specific data the response
+   *  is only cached for the user.
+   */
+  if (hasPrivateTypes) {
+    querySignature = await SHA256(authHeader + content)
+  } else {
+    querySignature = await SHA256(content)
+  }
+
   /**
    * Check if query is in the cache
    */
-  if (queryHash) {
-    const { value, metadata } = await find(queryHash)
+  if (querySignature) {
+    const { value, metadata } = await find(querySignature)
 
     if (value) {
       const res = new Response(value.body, {
@@ -107,7 +112,10 @@ export const graphql: Handler = async function (req, res) {
         const age = Math.round((Date.now() - metadata.createdAt) / 1000)
         res.headers.set(
           Headers.age,
-          age > metadata.expirationTtl ? metadata.expirationTtl : age,
+          (age > metadata.expirationTtl
+            ? metadata.expirationTtl
+            : age
+          ).toString(),
         )
       }
 
@@ -127,7 +135,8 @@ export const graphql: Handler = async function (req, res) {
     method: req.method,
   })
 
-  const isCacheable = isIdempotent && queryHash && isResponseCachable(response)
+  const isCacheable = !isMutationRequest && isResponseCachable(response)
+
   const contentType = response.headers.get(Headers.contentType)
 
   if (contentType?.includes('application/json')) {
@@ -158,7 +167,7 @@ export const graphql: Handler = async function (req, res) {
       res.headers.forEach((val, key) => (serializableHeaders[key] = val))
 
       const result = await save(
-        queryHash!,
+        querySignature,
         {
           headers: serializableHeaders,
           body: results,
