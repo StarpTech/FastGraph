@@ -51,7 +51,7 @@ export const parseMaxAge = (header: string): number => {
 
 export const graphql: Handler = async function (req, res) {
   const originalBody = await req.body.json()
-  let queryHash = ''
+  let queryHash = undefined
   let isIdempotent = false
 
   const defaultResponseHeaders: Record<string, string> = {
@@ -118,15 +118,14 @@ export const graphql: Handler = async function (req, res) {
     }
   }
 
-  const init = {
-    ...req,
-    body: JSON.stringify(originalBody),
-  }
-
   /**
    * Refresh content from origin
    */
-  const response = await fetch(origin, init)
+  const response = await fetch(origin, {
+    body: JSON.stringify(originalBody),
+    headers: req.headers,
+    method: req.method,
+  })
 
   const isCacheable = isIdempotent && queryHash && isResponseCachable(response)
   const contentType = response.headers.get(Headers.contentType)
@@ -159,7 +158,7 @@ export const graphql: Handler = async function (req, res) {
       res.headers.forEach((val, key) => (serializableHeaders[key] = val))
 
       const result = await save(
-        queryHash,
+        queryHash!,
         {
           headers: serializableHeaders,
           body: results,
@@ -195,7 +194,7 @@ export const graphql: Handler = async function (req, res) {
   return res.send(
     415,
     {
-      error: `Unsupported content-type "${contentType}" from origin "${origin}".`
+      error: `Unsupported content-type "${contentType}" from origin "${origin}".`,
     },
     {
       ...defaultResponseHeaders,
