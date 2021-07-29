@@ -9,7 +9,8 @@ import {
   Headers,
   CacheHitHeader,
   isResponseCachable,
-  parseMaxAge
+  parseMaxAge,
+  isResponsePrivate,
 } from '../utils'
 import { find, save } from '../stores/QueryCache'
 import { latest } from '../stores/Schema'
@@ -135,7 +136,10 @@ export const graphql: Handler = async function (req, res) {
     method: req.method,
   })
 
-  const isCacheable = !isMutationRequest && isResponseCachable(response)
+  const isCacheable =
+    !isMutationRequest &&
+    (isResponseCachable(response) ||
+      (hasPrivateTypes && isResponsePrivate(response)))
 
   const contentType = response.headers.get(Headers.contentType)
 
