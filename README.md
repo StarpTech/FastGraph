@@ -10,6 +10,9 @@
 
 * Cache GraphQL queries
 * Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
+* Set appropriate cache headers `age`, `x-cache`, `cache-control`
+* Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
+* [ ] Smart GraphQL cache invalidation
 
 ## Caching semantics
 
