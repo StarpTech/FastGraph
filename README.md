@@ -16,7 +16,17 @@
 
 ## Caching semantics
 
-Requests are cached by default with a TTL of 900 seconds. You can set a custom TTL per request. You only need to respond with a `Cache-Control: max-age: 600` header from your origin. Mutations aren't cached.
+All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You can set a custom TTL per request by responding with a different `max-age` value from your origin.
+
+### Cache authenticated data
+
+When a GraphQL query contains one of the `PRIVATE_TYPES=User` the response is handled as user scoped. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you also need to push your latest GraphQL schema to the _KV_ `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`.
+
+```sh
+wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA_STRING
+```
+
+When no schema was provided the request isn't cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
 ## Getting Started
 
@@ -52,10 +62,6 @@ Set the variables in your `wrangler.toml`.
 - `GRAPHQL_URL`. The GraphQL endpoint.
 - `DEFAULT_TTL`. The default TTL (minimum 60s) of cacheable responses.
 - `PRIVATE_TYPES`. The GraphQL types that indicates a private response (comma-separated).
-
-## Private cache
-
-You can control with `PRIVATE_TYPES` that a query result is only intended for a single user. In that case, your server must respond with `Cache-Control: Private` to mark the response as cacheable. The _Authorization_ header is used to calculate the user cache key. In order to use this feature, you also need to push your latest schema to the KV `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`.
 
 ## Performance & Security
 

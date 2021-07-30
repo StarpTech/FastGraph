@@ -10,7 +10,6 @@ import {
   CacheHitHeader,
   isResponseCachable,
   parseMaxAge,
-  isResponsePrivate,
 } from '../utils'
 import { find, save } from '../stores/QueryCache'
 import { latest } from '../stores/Schema'
@@ -70,22 +69,23 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const authHeader = req.headers.get(Headers.authorization) || ''
-  let querySignature = await SHA256(content)
+  const isPrivateAndCacheable = isMutationRequest === false && hasPrivateTypes
+  let querySignature = ''
 
   /**
    *  In case of the query will return user specific data the response
    *  is cached user specific based on the Authorization header
    */
-  if (hasPrivateTypes) {
+  if (isPrivateAndCacheable) {
     querySignature = await SHA256(authHeader + content)
-  } else {
+  } else if (isMutationRequest === false) {
     querySignature = await SHA256(content)
   }
 
   /**
    * Check if query is in the cache
    */
-  if (querySignature) {
+  if (isMutationRequest === false) {
     const { value, metadata } = await find(querySignature)
 
     if (value) {
@@ -123,10 +123,8 @@ export const graphql: Handler = async function (req, res) {
     method: req.method,
   })
 
-  const isPrivateAndCacheable =
-    !isMutationRequest && hasPrivateTypes && isResponsePrivate(response)
   const isCacheable =
-    (!isMutationRequest && isResponseCachable(response)) ||
+    (isMutationRequest === false && isResponseCachable(response)) ||
     isPrivateAndCacheable
 
   const contentType = response.headers.get(Headers.contentType)

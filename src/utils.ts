@@ -36,14 +36,7 @@ export function isResponseCachable(res: Response): boolean {
   if (!!~vary.indexOf('*')) return false
 
   const ccontrol = res.headers.get(Headers.cacheControl) || ''
-  if (/(no-cache|no-store)/i.test(ccontrol)) return false
+  if (/(private|no-cache|no-store)/i.test(ccontrol)) return false
 
   return true
-}
-
-export function isResponsePrivate(res: Response): boolean {
-  const ccontrol = res.headers.get(Headers.cacheControl) || ''
-  if (/(private)/i.test(ccontrol)) return true
-
-  return false
 }
