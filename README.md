@@ -2,9 +2,11 @@
   <img src="logo.png" alt="graphcdn" />
 </div>
 
-<br/>
-
-<div align="center">Cache GraphQL POST Requests on Cloudflare edges with zero configuration</div>
+<div align="center">
+  <a href="https://github.com/StarpTech/GraphCDN/actions?query=workflow%3Aci">
+    <img src="https://github.com/StarpTech/GraphCDN/actions/workflows/ci.yml/badge.svg?event=push" alt="CI" />
+  </a>
+</div>
 
 ## Features
 
