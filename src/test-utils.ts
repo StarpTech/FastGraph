@@ -2,6 +2,13 @@ import { ServerRequest } from 'worktop/request'
 import { ServerResponse } from 'worktop/response'
 import { createHash, randomBytes } from 'crypto'
 
+// @ts-ignore
+globalThis.GRAPHQL_URL = 'https://grapql-endpoint/'
+// @ts-ignore
+globalThis.DEFAULT_TTL = '900'
+// @ts-ignore
+globalThis.PRIVATE_TYPES = ''
+
 globalThis.crypto = {
   // @ts-ignore
   getRandomValues(arr: Uint8Array) {
@@ -17,6 +24,8 @@ globalThis.crypto = {
     },
   },
 }
+
+globalThis.Date.now = () => 1627670799330
 
 globalThis.btoa = (x) => Buffer.from(x).toString('base64')
 globalThis.atob = (x) => Buffer.from(x, 'base64').toString()
@@ -48,14 +57,16 @@ export const Headers = (init: readonly [string, string][] | null) => {
   return raw as Headers
 }
 
-export const Response = () => {
+export const WorktopResponse = () => {
   let headers = Headers(null)
   let body: any,
     finished = false,
     statusCode = 0
   // @ts-ignore
   return {
-    headers,
+    get headers() {
+      return headers
+    },
     finished,
     get statusCode() {
       return statusCode
@@ -64,9 +75,10 @@ export const Response = () => {
     get body() {
       return body
     },
-    send: (code, payload) => {
+    send: (code, payload, h: { [s: string]: string }) => {
       statusCode = code
       body = payload
+      headers = new globalThis.Headers(Object.entries(h))
     },
     end(val: any) {
       finished = true
@@ -75,34 +87,42 @@ export const Response = () => {
   } as ServerResponse
 }
 
-export const Request = (
-  method = 'GET',
-  queryString = '',
+export const WorktopRequest = (
+  method = 'POST',
   payload: object | null = null,
   headers: Headers = Headers(null),
 ): ServerRequest => {
-  let query = new URLSearchParams(queryString)
   return {
     method,
     headers,
-    query,
-    body() {
-      return Promise.resolve(payload)
+    body: {
+      json() {
+        return Promise.resolve(payload)
+      },
     },
   } as ServerRequest
 }
 
-export const createEmptyKVNamespaces = (namespaces: string[]) => {
+export const createKVNamespaces = (
+  namespaces: string[],
+  store: Map<string, any> = new Map(),
+  metadata: Map<string, any> = new Map(),
+) => {
   for (const namespace of namespaces) {
-    NewKVNamespace({
-      name: namespace,
-    })
+    NewKVNamespace(
+      {
+        name: namespace,
+      },
+      store,
+      metadata,
+    )
   }
 }
 
 export const NewKVNamespace = (
   bindingConfig: { name: string },
   store: Map<string, any> = new Map(),
+  metadata: Map<string, any> = new Map(),
 ) => {
   let binding = Namespace()
   binding.get = (key: string, format: string) => {
@@ -115,14 +135,91 @@ export const NewKVNamespace = (
   }
   binding.delete = (key: string) => {
     store.delete(key)
+    metadata.delete(key)
     return Promise.resolve()
   }
-  binding.put = (key: string, value: any) => {
+  binding.put = (key: string, value: any, m: any) => {
     store.set(key, value)
+    metadata.set(key, m)
     return Promise.resolve()
+  }
+  binding.getWithMetadata = async (key: string, format: string) => {
+    const m = metadata.get(key)
+    return { value: await binding.get(key, format), metadata: m?.metadata }
   }
   // @ts-ignore
   globalThis[bindingConfig.name] = binding
 
   return store
+}
+
+// @ts-ignore - faking it
+globalThis.Headers = class Headers extends Map {
+  get(key: string) {
+    return super.get(key.toLowerCase())
+  }
+  has(key: string) {
+    return super.has(key.toLowerCase())
+  }
+  set(key: string, value: string) {
+    return super.set(key.toLowerCase(), value)
+  }
+  append(key: string, val: string) {
+    let prev = this.get(key) || ''
+    if (prev) prev += ', '
+    this.set(key, prev + val)
+  }
+}
+
+// @ts-ignore - faking it
+globalThis.fetch = async function Fetch(url: RequestInfo, init?: RequestInit) {
+  let headers
+  if (init) {
+    if (init.headers instanceof globalThis.Headers) {
+      headers = init.headers
+    } else if (init.headers) {
+      headers = new globalThis.Headers(Object.entries(init.headers as any))
+    } else {
+      headers = new globalThis.Headers()
+    }
+  }
+
+  return {
+    headers,
+    json() {
+      return null
+    },
+  }
+}
+
+export const mockFetch = (json: any, headers: { [s: string]: any }) => {
+  // @ts-ignore
+  const oldFetch = globalThis.fetch
+
+  return {
+    mock() {
+      // @ts-ignore - faking it
+      globalThis.fetch = async () => {
+        return {
+          headers: new globalThis.Headers(Object.entries(headers)),
+          json() {
+            return json
+          },
+        }
+      }
+
+      return this
+    },
+    revert() {
+      globalThis.fetch = oldFetch
+    },
+  }
+}
+
+export const getKVEntries = (m: Map<string, any>) => {
+  const obj: { [k: string]: any } = {}
+  for (const [key, val] of m) {
+    obj[key] = JSON.parse(val)
+  }
+  return obj
 }

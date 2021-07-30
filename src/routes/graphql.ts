@@ -33,7 +33,6 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const defaultResponseHeaders: Record<string, string> = {
-    [Headers.contentType]: 'application/json',
     [Headers.date]: new Date(Date.now()).toUTCString(),
     [Headers.accessControlMaxAge]: '300',
     [Headers.xCache]: CacheHitHeader.MISS,
@@ -61,10 +60,8 @@ export const graphql: Handler = async function (req, res) {
   } catch (error) {
     return res.send(400, error, {
       ...defaultResponseHeaders,
-      ...{
-        [Headers.gcdnCache]: CacheHitHeader.ERROR,
-        [Headers.xCache]: CacheHitHeader.HIT,
-      },
+      [Headers.gcdnCache]: CacheHitHeader.ERROR,
+      [Headers.xCache]: CacheHitHeader.HIT,
     })
   }
 
@@ -89,28 +86,22 @@ export const graphql: Handler = async function (req, res) {
     const { value, metadata } = await find(querySignature)
 
     if (value) {
-      const res = new Response(value.body, {
-        headers: {
-          ...value.headers,
-          ...defaultResponseHeaders,
-        },
-      })
-
+      const headers: Record<string, string> = {
+        [Headers.gcdnCache]: CacheHitHeader.HIT,
+        [Headers.xCache]: CacheHitHeader.HIT,
+      }
       if (metadata) {
         const age = Math.round((Date.now() - metadata.createdAt) / 1000)
-        res.headers.set(
-          Headers.age,
-          (age > metadata.expirationTtl
-            ? metadata.expirationTtl
-            : age
-          ).toString(),
-        )
+        headers[Headers.age] = (
+          age > metadata.expirationTtl ? metadata.expirationTtl : age
+        ).toString()
       }
 
-      res.headers.set(Headers.gcdnCache, CacheHitHeader.HIT)
-      res.headers.set(Headers.xCache, CacheHitHeader.HIT)
-
-      return res
+      return res.send(200, value.body, {
+        ...value.headers,
+        ...defaultResponseHeaders,
+        ...headers,
+      })
     }
   }
 
@@ -128,6 +119,7 @@ export const graphql: Handler = async function (req, res) {
     isPrivateAndCacheable
 
   const contentType = response.headers.get(Headers.contentType)
+  const originHeaders = Object.fromEntries(response.headers)
 
   if (contentType?.includes('application/json')) {
     const originResult = await response.json()
@@ -141,33 +133,27 @@ export const graphql: Handler = async function (req, res) {
         maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
       }
 
-      const res = new Response(results, {
-        ...response,
-        headers: {
-          ...response.headers,
-          ...defaultResponseHeaders,
-        },
-      })
-
-      if (isPrivateAndCacheable) {
-        res.headers.set(
-          Headers.cacheControl,
-          `private, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
-        )
-      } else {
-        res.headers.set(
-          Headers.cacheControl,
-          `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
-        )
+      const headers: Record<string, string> = {
+        [Headers.gcdnCache]: CacheHitHeader.PASS,
+        [Headers.xCache]: CacheHitHeader.PASS,
+        ...originHeaders,
+        ...defaultResponseHeaders,
       }
 
-      const serializableHeaders: Record<string, string> = {}
-      res.headers.forEach((val, key) => (serializableHeaders[key] = val))
+      if (isPrivateAndCacheable) {
+        headers[
+          Headers.cacheControl
+        ] = `private, max-age=${maxAge}, stale-while-revalidate=${maxAge}`
+      } else {
+        headers[
+          Headers.cacheControl
+        ] = `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`
+      }
 
       const result = await save(
         querySignature,
         {
-          headers: serializableHeaders,
+          headers,
           body: results,
         },
         maxAge,
@@ -177,19 +163,14 @@ export const graphql: Handler = async function (req, res) {
         console.error('query could not be stored in cache')
       }
 
-      res.headers.set(Headers.gcdnCache, CacheHitHeader.PASS)
-
-      return res
+      return res.send(200, results, headers)
     }
 
     // First call or mutation requests
-    return new Response(results, {
-      ...response,
-      headers: {
-        ...response.headers,
-        ...defaultResponseHeaders,
-        [Headers.gcdnCache]: CacheHitHeader.PASS,
-      },
+    return res.send(200, results, {
+      ...originHeaders,
+      ...defaultResponseHeaders,
+      [Headers.gcdnCache]: CacheHitHeader.PASS,
     })
   }
 
