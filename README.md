@@ -28,7 +28,7 @@ When a GraphQL query contains one of the `PRIVATE_TYPES=User` the response is ha
 wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA_STRING
 ```
 
-When no schema was provided or no type was matched the request isn't cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
+When no schema was provided or no type was matched the request is always cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
 ## Getting Started
 
