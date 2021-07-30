@@ -50,8 +50,9 @@ npm run deploy
 
 ```sh
 curl --request POST \
+  --compressed \
   --url https://graphcdn.starptech.workers.dev/ \
-  --header 'Accept-Encoding: gzip, deflate, br' \
+  --header 'Accept-Encoding: gzip' \
   --header 'Content-Type: application/json' \
   --data '{"query":"{\n  stationWithEvaId(evaId: 8000105) {\n    name\n    location {\n      latitude\n      longitude\n    }\n    picture {\n      url\n    }\n  }\n}"}'
 ```
