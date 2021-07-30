@@ -33,8 +33,6 @@ export const graphql: Handler = async function (req, res) {
     })
   }
 
-  let isMutationRequest = false
-
   const defaultResponseHeaders: Record<string, string> = {
     [Headers.contentType]: 'application/json',
     [Headers.date]: new Date(Date.now()).toUTCString(),
@@ -44,45 +42,39 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const queryDocumentNode = parse(originalBody.query, { noLocation: true })
-
-  if (originalBody.query) {
-    /**
-     * Check if we received a query or mutation.
-     * Parsing the query can throw.
-     */
-    try {
-      isMutationRequest = isMutation(queryDocumentNode)
-    } catch (error) {
-      return res.send(400, error, {
-        ...defaultResponseHeaders,
-        ...{
-          [Headers.gcdnCache]: CacheHitHeader.ERROR,
-          [Headers.xCache]: CacheHitHeader.HIT,
-        },
-      })
-    }
-  }
-
-  const schema = await latest()
   let hasPrivateTypes = false
+  let isMutationRequest = false
+  let content = undefined
 
-  if (schema && privateTypes.length > 0) {
-    hasPrivateTypes = hasIntersectedTypes(
-      schema,
-      queryDocumentNode,
-      privateTypes,
-    )
+  try {
+    const schema = await latest()
+
+    if (schema && privateTypes.length > 0) {
+      hasPrivateTypes = hasIntersectedTypes(
+        schema,
+        queryDocumentNode,
+        privateTypes,
+      )
+    }
+
+    content = normalizeDocument(originalBody.query)
+    isMutationRequest = isMutation(queryDocumentNode)
+  } catch (error) {
+    return res.send(400, error, {
+      ...defaultResponseHeaders,
+      ...{
+        [Headers.gcdnCache]: CacheHitHeader.ERROR,
+        [Headers.xCache]: CacheHitHeader.HIT,
+      },
+    })
   }
-
-  const content = normalizeDocument(originalBody.query)
 
   const authHeader = req.headers.get(Headers.authorization) || ''
-
-  let querySignature = ''
+  let querySignature = await SHA256(content)
 
   /**
    *  In case of the query will return user specific data the response
-   *  is only cached for the user.
+   *  is cached user specific based on the Authorization header
    */
   if (hasPrivateTypes) {
     querySignature = await SHA256(authHeader + content)
@@ -105,11 +97,6 @@ export const graphql: Handler = async function (req, res) {
       })
 
       if (metadata) {
-        res.headers.set(
-          Headers.cacheControl,
-          `public, max-age=${metadata.expirationTtl}, stale-while-revalidate=${metadata.expirationTtl}`,
-        )
-
         const age = Math.round((Date.now() - metadata.createdAt) / 1000)
         res.headers.set(
           Headers.age,
@@ -136,10 +123,11 @@ export const graphql: Handler = async function (req, res) {
     method: req.method,
   })
 
+  const isPrivateAndCacheable =
+    !isMutationRequest && hasPrivateTypes && isResponsePrivate(response)
   const isCacheable =
-    !isMutationRequest &&
-    (isResponseCachable(response) ||
-      (hasPrivateTypes && isResponsePrivate(response)))
+    (!isMutationRequest && isResponseCachable(response)) ||
+    isPrivateAndCacheable
 
   const contentType = response.headers.get(Headers.contentType)
 
@@ -163,8 +151,16 @@ export const graphql: Handler = async function (req, res) {
         },
       })
 
-      if (res.headers.has('Set-Cookie')) {
-        res.headers.append('Cache-Control', 'private=Set-Cookie')
+      if (isPrivateAndCacheable) {
+        res.headers.set(
+          Headers.cacheControl,
+          `private, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
+        )
+      } else {
+        res.headers.set(
+          Headers.cacheControl,
+          `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
+        )
       }
 
       const serializableHeaders: Record<string, string> = {}
@@ -184,10 +180,6 @@ export const graphql: Handler = async function (req, res) {
       }
 
       res.headers.set(Headers.gcdnCache, CacheHitHeader.PASS)
-      res.headers.set(
-        Headers.cacheControl,
-        `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`,
-      )
 
       return res
     }
