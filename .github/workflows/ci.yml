@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - '!**.md'
+      - '!*.md'
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    name: Node.js v${{ matrix.nodejs }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nodejs: [14, 16]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.nodejs }}
+
+    - name: (env) cache
+      uses: actions/cache@v2
+      with:
+        # npm cache files are stored in `~/.npm` on Linux/macOS
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install
+      run: npm install
+
+    - name: Run Tests
+      run: npm test
