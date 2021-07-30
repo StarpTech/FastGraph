@@ -51,7 +51,7 @@ Set the variables in your `wrangler.toml`.
 
 - `GRAPHQL_URL`. The GraphQL endpoint.
 - `DEFAULT_TTL`. The default TTL (minimum 60s) of cacheable responses.
-- `PRIVATE_TYPES`. The GraphQL types that indicates a private response.
+- `PRIVATE_TYPES`. The GraphQL types that indicates a private response (comma-separated).
 
 ## Private cache
 
