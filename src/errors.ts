@@ -1,10 +1,6 @@
-export class Base extends Error {
-    name: string
-    statusCode: number
-    constructor(name: string, msg: string, statusCode: number) {
-      super(msg)
-      this.name = name
-      this.statusCode = statusCode
-    }
+export class HTTPResponseError extends Error {
+  constructor(private response: Response) {
+    super(`HTTP Error Response: ${response.status} ${response.statusText}`)
+    this.response = response
   }
-  
+}

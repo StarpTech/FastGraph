@@ -201,6 +201,7 @@ export const mockFetch = (json: any, headers: { [s: string]: any }) => {
       // @ts-ignore - faking it
       globalThis.fetch = async () => {
         return {
+          ok: true,
           headers: new globalThis.Headers(Object.entries(headers)),
           json() {
             return json

@@ -1,5 +1,6 @@
 import type { Handler } from 'worktop'
 import { SHA256 } from 'worktop/crypto'
+import retry from 'async-retry'
 import {
   normalizeDocument,
   isMutation,
@@ -14,6 +15,7 @@ import {
 import { find, save } from '../stores/QueryCache'
 import { latest } from '../stores/Schema'
 import { parse } from 'graphql'
+import { HTTPResponseError } from '../errors'
 
 declare const GRAPHQL_URL: string
 declare const DEFAULT_TTL: string
@@ -108,23 +110,37 @@ export const graphql: Handler = async function (req, res) {
   /**
    * Refresh content from origin
    */
-  const response = await fetch(origin, {
-    body: JSON.stringify(originalBody),
-    headers: req.headers,
-    method: req.method,
-  })
+  let originResponse = await retry(
+    async () => {
+      const resp = await fetch(origin, {
+        body: JSON.stringify(originalBody),
+        headers: req.headers,
+        method: req.method,
+      })
+
+      if (!resp.ok) {
+        throw new HTTPResponseError(resp)
+      }
+
+      return resp
+    },
+    {
+      retries: 5,
+      maxTimeout: 5000,
+    },
+  )
 
   const isCacheable =
-    (isMutationRequest === false && isResponseCachable(response)) ||
+    (isMutationRequest === false && isResponseCachable(originResponse)) ||
     isPrivateAndCacheable
 
-  const contentType = response.headers.get(Headers.contentType)
-  const originHeaders = Object.fromEntries(response.headers)
+  const contentType = originResponse.headers.get(Headers.contentType)
+  const originHeaders = Object.fromEntries(originResponse.headers)
 
   if (contentType?.includes('application/json')) {
-    const originResult = await response.json()
+    const originResult = await originResponse.json()
     const results = JSON.stringify(originResult)
-    const maxAgeHeaderValue = response.headers.get(Headers.cacheControl)
+    const maxAgeHeaderValue = originResponse.headers.get(Headers.cacheControl)
 
     if (isCacheable) {
       let maxAge = defaultMaxAgeInSeconds
