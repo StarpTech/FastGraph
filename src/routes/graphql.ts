@@ -25,8 +25,14 @@ const origin = GRAPHQL_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const privateTypes = PRIVATE_TYPES.split(',')
 
+type GraphQLRequest = {
+  query: string
+  operationName?: string
+  variables?: Record<string, any>
+}
+
 export const graphql: Handler = async function (req, res) {
-  const originalBody = await req.body.json()
+  const originalBody = await req.body.json<GraphQLRequest>()
 
   if (!originalBody.query) {
     return res.send(400, {

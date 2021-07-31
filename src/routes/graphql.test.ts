@@ -8,7 +8,7 @@ import {
 } from '../test-utils'
 import { graphql } from './graphql'
 
-test(
+test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
     const KV = new Map()

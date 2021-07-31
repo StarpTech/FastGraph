@@ -9,7 +9,7 @@
     "build": "webpack",
     "deploy": "NODE_ENV=production wrangler publish",
     "test": "npm run unit",
-    "unit": "ava --serial src/**/*.test.ts src/*.test.ts",
+    "unit": "ava src/**/*.test.ts src/*.test.ts",
     "watch": "npm run unit -- --watch",
     "cov": "nyc --reporter=lcov --reporter=text-summary -- npm run unit",
     "format": "prettier --write '**/*.{js,ts,json,md}'",
