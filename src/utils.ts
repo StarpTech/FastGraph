@@ -7,6 +7,9 @@ export enum Headers {
   age = 'age',
   xCache = 'x-cache',
   authorization = 'authorization',
+  vary = 'vary',
+  xRobotsTag = 'x-robots-tag',
+  xFrameOptions = 'x-frame-options',
 
   // CORS
   accessControlAllowCredentials = 'access-control-allow-credentials',
@@ -15,6 +18,9 @@ export enum Headers {
   accessControlAllowOrigin = 'access-control-allow-origin',
   accessControlExposeHeaders = 'access-control-expose-headers',
   accessControlMaxAge = 'access-control-max-age',
+
+  contentSecurityPolicy = 'content-security-policy',
+  strictTransportSecurity = 'strict-transport-security',
 }
 
 export enum CacheHitHeader {

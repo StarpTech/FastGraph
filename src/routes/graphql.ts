@@ -17,13 +17,15 @@ import { latest } from '../stores/Schema'
 import { parse } from 'graphql'
 import { HTTPResponseError } from '../errors'
 
-declare const GRAPHQL_URL: string
+declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
 declare const PRIVATE_TYPES: string
+declare const INJECT_HEADERS: string
 
-const origin = GRAPHQL_URL
+const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const privateTypes = PRIVATE_TYPES.split(',')
+const injectHeaders = !!INJECT_HEADERS
 
 type GraphQLRequest = {
   query: string
@@ -41,10 +43,17 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const defaultResponseHeaders: Record<string, string> = {
+    [Headers.contentType]: 'application/json',
     [Headers.date]: new Date(Date.now()).toUTCString(),
-    [Headers.accessControlMaxAge]: '300',
     [Headers.xCache]: CacheHitHeader.MISS,
     [Headers.gcdnCache]: CacheHitHeader.MISS,
+    [Headers.xFrameOptions]: 'deny',
+    [Headers.xRobotsTag]: 'noindex',
+    [Headers.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
+
+    [Headers.contentSecurityPolicy]: `default-src 'none'`,
+    [Headers.strictTransportSecurity]:
+      'max-age=31536000; includeSubdomains; preload',
   }
 
   const queryDocumentNode = parse(originalBody.query, { noLocation: true })
@@ -118,7 +127,7 @@ export const graphql: Handler = async function (req, res) {
    */
   let originResponse = await retry(
     async () => {
-      const resp = await fetch(origin, {
+      const resp = await fetch(originUrl, {
         body: JSON.stringify(originalBody),
         headers: req.headers,
         method: req.method,
@@ -158,18 +167,20 @@ export const graphql: Handler = async function (req, res) {
       const headers: Record<string, string> = {
         [Headers.gcdnCache]: CacheHitHeader.PASS,
         [Headers.xCache]: CacheHitHeader.PASS,
-        ...originHeaders,
+        ...(injectHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }
 
       if (isPrivateAndCacheable) {
         headers[
           Headers.cacheControl
-        ] = `private, max-age=${maxAge}, stale-while-revalidate=${maxAge}`
+        ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
+        headers[Headers.vary] =
+          'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       } else {
         headers[
           Headers.cacheControl
-        ] = `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}`
+        ] = `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
       }
 
       const result = await save(
@@ -190,7 +201,7 @@ export const graphql: Handler = async function (req, res) {
 
     // First call or mutation requests
     return res.send(200, results, {
-      ...originHeaders,
+      ...(injectHeaders ? originHeaders : undefined),
       ...defaultResponseHeaders,
       [Headers.gcdnCache]: CacheHitHeader.PASS,
     })
@@ -200,7 +211,7 @@ export const graphql: Handler = async function (req, res) {
   return res.send(
     415,
     {
-      error: `Unsupported content-type "${contentType}" from origin "${origin}".`,
+      error: `Unsupported content-type "${contentType}" from origin "${originUrl}".`,
     },
     {
       ...defaultResponseHeaders,

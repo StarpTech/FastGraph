@@ -3,11 +3,13 @@ import { ServerResponse } from 'worktop/response'
 import { createHash, randomBytes } from 'crypto'
 
 // @ts-ignore
-globalThis.GRAPHQL_URL = 'https://grapql-endpoint/'
+globalThis.ORIGIN_URL = 'https://grapql-endpoint/'
 // @ts-ignore
 globalThis.DEFAULT_TTL = '900'
 // @ts-ignore
 globalThis.PRIVATE_TYPES = ''
+// @ts-ignore
+globalThis.INJECT_HEADERS = ''
 
 globalThis.crypto = {
   // @ts-ignore
@@ -125,11 +127,11 @@ export const NewKVNamespace = (
   metadata: Map<string, any> = new Map(),
 ) => {
   let binding = Namespace()
-  binding.get = (key: string, format: string) => {
+  binding.get = (key: string, type: string) => {
     const m = store.has(key)
     if (m) {
       const val = store.get(key)
-      return Promise.resolve(format === 'json' ? JSON.parse(val) : val)
+      return Promise.resolve(type === 'json' ? JSON.parse(val) : val)
     }
     return Promise.resolve(null)
   }
@@ -143,9 +145,9 @@ export const NewKVNamespace = (
     metadata.set(key, m)
     return Promise.resolve()
   }
-  binding.getWithMetadata = async (key: string, format: string) => {
+  binding.getWithMetadata = async (key: string, options: { metadata: boolean; type: string }) => {
     const m = metadata.get(key)
-    return { value: await binding.get(key, format), metadata: m?.metadata }
+    return { value: await binding.get(key, options.type), metadata: m?.metadata }
   }
   // @ts-ignore
   globalThis[bindingConfig.name] = binding

@@ -13,9 +13,10 @@ kv_namespaces = [
 ]
 
 [vars]
-GRAPHQL_URL = "https://bahnql.herokuapp.com/graphql"
+ORIGIN_URL = "https://bahnql.herokuapp.com/graphql"
 DEFAULT_TTL = "900"
 PRIVATE_TYPES = ""
+INJECT_HEADERS = ""
 
 [dev]
 ip = "0.0.0.0"

@@ -46,12 +46,18 @@ test.serial(
     t.deepEqual(res.body, JSON.stringify(originResponseJson))
 
     t.deepEqual(Object.fromEntries(res.headers), {
-      'gcdn-cache': 'MISS',
-      'x-cache': 'MISS',
+      'cache-control':
+        'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      'content-security-policy': "default-src 'none'",
       'content-type': 'application/json',
       date: 'Fri, 30 Jul 2021 18:46:39 GMT',
-      'access-control-max-age': '300',
-      'cache-control': 'public, max-age=900, stale-while-revalidate=900',
+      'gcdn-cache': 'MISS',
+      'strict-transport-security':
+        'max-age=31536000; includeSubdomains; preload',
+      vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
+      'x-cache': 'MISS',
+      'x-frame-options': 'deny',
+      'x-robots-tag': 'noindex',
     })
 
     t.deepEqual(getKVEntries(KV), {
@@ -59,12 +65,18 @@ test.serial(
         {
           body: JSON.stringify(originResponseJson),
           headers: {
-            'access-control-max-age': '300',
-            'cache-control': 'public, max-age=900, stale-while-revalidate=900',
+            'cache-control':
+              'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+            'content-security-policy': "default-src 'none'",
             'content-type': 'application/json',
             date: 'Fri, 30 Jul 2021 18:46:39 GMT',
             'gcdn-cache': 'MISS',
+            'strict-transport-security':
+              'max-age=31536000; includeSubdomains; preload',
+            vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
             'x-cache': 'MISS',
+            'x-frame-options': 'deny',
+            'x-robots-tag': 'noindex',
           },
         },
     })
@@ -84,11 +96,19 @@ test.serial(
     t.is(res.statusCode, 200)
 
     t.deepEqual(Object.fromEntries(res.headers), {
-      'access-control-max-age': '300',
       age: '0',
+      'cache-control':
+        'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      'content-security-policy': "default-src 'none'",
+      'content-type': 'application/json',
       date: 'Fri, 30 Jul 2021 18:46:39 GMT',
       'gcdn-cache': 'HIT',
+      'strict-transport-security':
+        'max-age=31536000; includeSubdomains; preload',
+      vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
       'x-cache': 'HIT',
+      'x-frame-options': 'deny',
+      'x-robots-tag': 'noindex',
     })
   },
 )
