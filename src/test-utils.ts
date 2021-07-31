@@ -10,6 +10,8 @@ globalThis.DEFAULT_TTL = '900'
 globalThis.PRIVATE_TYPES = ''
 // @ts-ignore
 globalThis.INJECT_HEADERS = ''
+// @ts-ignore
+globalThis.SCOPE = ''
 
 globalThis.crypto = {
   // @ts-ignore

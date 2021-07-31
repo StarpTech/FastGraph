@@ -54,6 +54,7 @@ test.serial(
       'gcdn-cache': 'MISS',
       'gcdn-origin-status-code': '200',
       'gcdn-origin-status-text': 'OK',
+      'gcdn-scope': 'PUBLIC',
       'strict-transport-security':
         'max-age=31536000; includeSubdomains; preload',
       vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -75,6 +76,7 @@ test.serial(
             'gcdn-cache': 'MISS',
             'gcdn-origin-status-code': '200',
             'gcdn-origin-status-text': 'OK',
+            'gcdn-scope': 'PUBLIC',
             'strict-transport-security':
               'max-age=31536000; includeSubdomains; preload',
             vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -109,6 +111,7 @@ test.serial(
       'gcdn-cache': 'HIT',
       'gcdn-origin-status-code': '200',
       'gcdn-origin-status-text': 'OK',
+      'gcdn-scope': 'PUBLIC',
       'strict-transport-security':
         'max-age=31536000; includeSubdomains; preload',
       vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',

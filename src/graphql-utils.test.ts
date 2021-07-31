@@ -20,5 +20,5 @@ test('extractTypes', async (t) => {
         }
       `),
   )
-  t.deepEqual([...ids], ['Query', 'Station', 'ID!'])
+  t.deepEqual([...ids], ['Station', 'ID!'])
 })

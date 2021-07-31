@@ -15,6 +15,7 @@ kv_namespaces = [
 [vars]
 ORIGIN_URL = "https://countries.trevorblades.com/"
 INTROSPECTION_URL = "https://countries.trevorblades.com/"
+SCOPE = "PUBLIC"
 DEFAULT_TTL = "900"
 PRIVATE_TYPES = ""
 INJECT_HEADERS = ""

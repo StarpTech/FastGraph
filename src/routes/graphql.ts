@@ -11,6 +11,7 @@ import {
   CacheHitHeader,
   isResponseCachable,
   parseMaxAge,
+  Scope,
 } from '../utils'
 import { find, save } from '../stores/QueryCache'
 import { latest } from '../stores/Schema'
@@ -21,11 +22,13 @@ declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
 declare const PRIVATE_TYPES: string
 declare const INJECT_HEADERS: string
+declare const SCOPE: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : []
 const injectHeaders = !!INJECT_HEADERS
+const scope: Scope = SCOPE as Scope
 
 type GraphQLRequest = {
   query: string
@@ -85,7 +88,9 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const authHeader = req.headers.get(Headers.authorization) || ''
-  const isPrivateAndCacheable = isMutationRequest === false && hasPrivateTypes
+  const isPrivateAndCacheable =
+    isMutationRequest === false &&
+    (hasPrivateTypes || scope === Scope.AUTHENTICATED)
   let querySignature = ''
 
   /**
@@ -195,21 +200,21 @@ export const graphql: Handler = async function (req, res) {
       const headers: Record<string, string> = {
         [Headers.gcdnCache]: CacheHitHeader.PASS,
         [Headers.xCache]: CacheHitHeader.PASS,
+        [Headers.gcdnScope]: Scope.PUBLIC,
+        [
+          Headers.cacheControl
+        ]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
         ...(injectHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }
 
       if (isPrivateAndCacheable) {
-        headers[Headers.gcdnAuthenticated] = 'true'
+        headers[Headers.gcdnScope] = Scope.AUTHENTICATED
         headers[
           Headers.cacheControl
         ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
         headers[Headers.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
-      } else {
-        headers[
-          Headers.cacheControl
-        ] = `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
       }
 
       const result = await save(

@@ -39,7 +39,6 @@ export function extractTypes(
   ast: DocumentNode,
 ): Set<string> {
   const types = new Set<string>()
-  types.add('Query') // by default available and can be used as "all" selector
 
   const typeInfo = new TypeInfo(schema)
 

@@ -69,6 +69,7 @@ Set the variables in your `wrangler.toml`.
 - `DEFAULT_TTL` The default TTL (minimum 60s) of cacheable responses (Default: 900)
 - `PRIVATE_TYPES` The GraphQL types that indicates a private response (Default: "")
 - `INJECT_HEADERS` Should the origin headers be injected in the response (Default: "")
+- `SCOPE` The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header (Default: "PUBLIC")
 - `INTROSPECTION_URL` The url of your introspection endpoint. If you enable it a [cron-triggers](https://developers.cloudflare.com/workers/platform/cron-triggers) will fetch for the latest schema every 30 minutes. (Default: "")
 
 ## Performance & Security

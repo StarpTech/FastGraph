@@ -3,7 +3,7 @@ export enum Headers {
   gcdnCache = 'gcdn-cache',
   gcdnOriginStatusCode = 'gcdn-origin-status-code',
   gcdnOriginStatusText = 'gcdn-origin-status-text',
-  gcdnAuthenticated = 'gcdn-authenticated',
+  gcdnScope = 'gcdn-scope',
 
   // Common
   setCookie = 'set-cookie',
@@ -28,6 +28,11 @@ export enum Headers {
   // Security
   contentSecurityPolicy = 'content-security-policy',
   strictTransportSecurity = 'strict-transport-security',
+}
+
+export enum Scope {
+  AUTHENTICATED = 'AUTHENTICATED',
+  PUBLIC = 'PUBLIC'
 }
 
 export enum CacheHitHeader {
