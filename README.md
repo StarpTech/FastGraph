@@ -53,13 +53,13 @@ npm run deploy
 ```sh
 curl --request POST \
   --compressed \
-  --url https://graphcdn.starptech.workers.dev/ \
+  --url https://countries.trevorblades.com/ \
   --header 'Accept-Encoding: gzip' \
   --header 'Content-Type: application/json' \
-  --data '{"query":"{\n  stationWithEvaId(evaId: 8000105) {\n    name\n    location {\n      latitude\n      longitude\n    }\n    picture {\n      url\n    }\n  }\n}"}'
+  --data '{"query":"{\n  continents {\n    code\n  }\n  languages {\n    name\n  }\n}"}'
 ```
 
-Cache GraphQL requests from [Deutsche Bahn](https://bahnql.herokuapp.com/graphql). Before `~900ms` after `~35ms`.
+Cache GraphQL requests from [Countries](https://countries.trevorblades.com/). Before `~1.7s` after `~35ms`.
 
 ## Configuration
 
