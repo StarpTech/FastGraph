@@ -23,11 +23,15 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 
 ### Cache authenticated data
 
-When a GraphQL query contains one of the GraphQL types e.g `PRIVATE_TYPES=User` the response is handled in user scope. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you also need to push your latest GraphQL schema to the _KV_ `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`.
+When a GraphQL query contains one of the GraphQL types defined in `PRIVATE_TYPES=User` the response is handled in user scope. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you have to provide your latest GraphQL schema. We provide two options.
+
+1. Push the schema manually to the _KV_ `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`
 
 ```sh
 wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA_STRING
 ```
+
+2. Set the `INTROSPECTION_URL` variable and the schema is synchronized every minute. The endpoint must be publicly available.
 
 When no schema was provided or no type was matched the request is always cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
@@ -67,6 +71,7 @@ Set the variables in your `wrangler.toml`.
 - `DEFAULT_TTL` The default TTL (minimum 60s) of cacheable responses (Default: 900)
 - `PRIVATE_TYPES` The GraphQL types that indicates a private response (Default: "")
 - `INJECT_HEADERS` Should GraphCDN inject the headers you provided into the edge? (Default: "")
+- `INTROSPECTION_URL` The url of your introspection endpoint. If you enable it a [cron-triggers](https://developers.cloudflare.com/workers/platform/cron-triggers) will fetch for the latest schema every minute. (Default: "")
 
 ## Performance & Security
 

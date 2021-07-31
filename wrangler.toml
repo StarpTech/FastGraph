@@ -13,7 +13,8 @@ kv_namespaces = [
 ]
 
 [vars]
-ORIGIN_URL = "https://bahnql.herokuapp.com/graphql"
+ORIGIN_URL = "https://countries.trevorblades.com/"
+INTROSPECTION_URL = "https://countries.trevorblades.com/"
 DEFAULT_TTL = "900"
 PRIVATE_TYPES = ""
 INJECT_HEADERS = ""
@@ -27,3 +28,6 @@ upstream_protocol="https"
 [build]
 upload.format = "service-worker"
 command = "npm run build"
+
+[triggers]
+crons = ["* * * * *"]

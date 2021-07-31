@@ -24,7 +24,7 @@ declare const INJECT_HEADERS: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
-const privateTypes = PRIVATE_TYPES.split(',')
+const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : []
 const injectHeaders = !!INJECT_HEADERS
 
 type GraphQLRequest = {
@@ -62,14 +62,16 @@ export const graphql: Handler = async function (req, res) {
   let content = undefined
 
   try {
-    const schema = await latest()
+    if (privateTypes.length > 0) {
+      const schema = await latest()
 
-    if (schema && privateTypes.length > 0) {
-      hasPrivateTypes = hasIntersectedTypes(
-        schema,
-        queryDocumentNode,
-        privateTypes,
-      )
+      if (schema) {
+        hasPrivateTypes = hasIntersectedTypes(
+          schema,
+          queryDocumentNode,
+          privateTypes,
+        )
+      }
     }
 
     content = normalizeDocument(originalBody.query)
