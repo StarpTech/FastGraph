@@ -44,8 +44,6 @@ npm install
 npm i @cloudflare/wrangler -g
 # Authenticate with your account
 wrangler login
-# Create key-value store
-wrangler kv:namespace create "QUERY_CACHE"
 # Deploy your worker
 npm run deploy
 ```
