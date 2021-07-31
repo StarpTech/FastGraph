@@ -13,9 +13,9 @@
 - Cache POST GraphQL queries
 - Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
 - Set appropriate cache headers `age`, `x-cache`, `cache-control`
-- Cache authenticated data by types selection
+- Cache authenticated data when specific GraphQL types are used
 - Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
-- Cloudflare Workers use an edge network across 200 cities and 95 countries. Cold start under 5ms. 50 times faster than other platforms.
+- Rely on an edge network across 200 cities and 95 countries. Cold start under 5ms.
 
 ## Caching semantics
 
