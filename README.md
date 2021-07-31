@@ -23,9 +23,9 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 
 ### Cache authenticated data
 
-When a GraphQL query contains one of the GraphQL types defined in `PRIVATE_TYPES=User` the response is handled in user scope. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you have to provide your latest GraphQL schema. We provide two options.
+When a GraphQL query contains one of the GraphQL types defined in `PRIVATE_TYPES=User` the response is handled in user scope. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you have to provide your latest GraphQL schema. We provide two options:
 
-1. Push the schema manually to the _KV_ `GRAPHQL_SCHEMA` with the key `graphql-schema::latest`
+1. Push the schema manually to cloudflare.
 
 ```sh
 wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA_STRING
