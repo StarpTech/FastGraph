@@ -6,7 +6,7 @@ workers_dev = true
 route = "graphcdn.microhug.com/"
 zone_id = ""
 target_type = "javascript"
-
+usage_model= "bundled"
 kv_namespaces = [ 
          { binding = "QUERY_CACHE", id = "4b5096c559034695be4d83fa91540c2c", preview_id = "4b5096c559034695be4d83fa91540c2c" },
          { binding = "GRAPHQL_SCHEMA", id = "deb5af2721a148f7a25d04c49ac36eb3", preview_id = "deb5af2721a148f7a25d04c49ac36eb3" }
@@ -30,4 +30,4 @@ upload.format = "service-worker"
 command = "npm run build"
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["*/30 * * * *"]
