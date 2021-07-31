@@ -204,6 +204,8 @@ export const mockFetch = (json: any, headers: { [s: string]: any }) => {
       globalThis.fetch = async () => {
         return {
           ok: true,
+          status: 200,
+          statusText: 'OK',
           headers: new globalThis.Headers(Object.entries(headers)),
           json() {
             return json

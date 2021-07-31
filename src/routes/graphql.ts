@@ -127,25 +127,51 @@ export const graphql: Handler = async function (req, res) {
   /**
    * Refresh content from origin
    */
-  let originResponse = await retry(
-    async () => {
-      const resp = await fetch(originUrl, {
-        body: JSON.stringify(originalBody),
-        headers: req.headers,
-        method: req.method,
-      })
+  let originResponse = null
 
-      if (!resp.ok) {
-        throw new HTTPResponseError(resp)
-      }
+  try {
+    originResponse = await retry(
+      async () => {
+        const resp = await fetch(originUrl, {
+          body: JSON.stringify(originalBody),
+          headers: req.headers,
+          method: req.method,
+        })
 
-      return resp
-    },
-    {
-      retries: 5,
-      maxTimeout: 5000,
-    },
-  )
+        if (!resp.ok) {
+          throw new HTTPResponseError(resp)
+        }
+
+        return resp
+      },
+      {
+        retries: 5,
+        maxTimeout: 5000,
+      },
+    )
+  } catch (error) {
+    if (error instanceof HTTPResponseError) {
+      defaultResponseHeaders[Headers.gcdnOriginStatusCode] =
+        error.response.status.toString()
+      defaultResponseHeaders[Headers.gcdnOriginStatusText] =
+        error.response.statusText.toString()
+      return res.send(
+        500,
+        {
+          error: 'Origin error',
+        },
+        {
+          ...defaultResponseHeaders,
+        },
+      )
+    }
+    throw error
+  }
+
+  defaultResponseHeaders[Headers.gcdnOriginStatusCode] =
+    originResponse.status.toString()
+  defaultResponseHeaders[Headers.gcdnOriginStatusText] =
+    originResponse.statusText.toString()
 
   const isCacheable =
     (isMutationRequest === false && isResponseCachable(originResponse)) ||
@@ -174,6 +200,7 @@ export const graphql: Handler = async function (req, res) {
       }
 
       if (isPrivateAndCacheable) {
+        headers[Headers.gcdnAuthenticated] = 'true'
         headers[
           Headers.cacheControl
         ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`

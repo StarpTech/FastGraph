@@ -1,5 +1,11 @@
 export enum Headers {
+  // GraphCDN
   gcdnCache = 'gcdn-cache',
+  gcdnOriginStatusCode = 'gcdn-origin-status-code',
+  gcdnOriginStatusText = 'gcdn-origin-status-text',
+  gcdnAuthenticated = 'gcdn-authenticated',
+
+  // Common
   setCookie = 'set-cookie',
   contentType = 'content-type',
   cacheControl = 'cache-control',
@@ -19,6 +25,7 @@ export enum Headers {
   accessControlExposeHeaders = 'access-control-expose-headers',
   accessControlMaxAge = 'access-control-max-age',
 
+  // Security
   contentSecurityPolicy = 'content-security-policy',
   strictTransportSecurity = 'strict-transport-security',
 }

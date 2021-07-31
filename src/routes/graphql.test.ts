@@ -52,6 +52,8 @@ test.serial(
       'content-type': 'application/json',
       date: 'Fri, 30 Jul 2021 18:46:39 GMT',
       'gcdn-cache': 'MISS',
+      'gcdn-origin-status-code': '200',
+      'gcdn-origin-status-text': 'OK',
       'strict-transport-security':
         'max-age=31536000; includeSubdomains; preload',
       vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -71,6 +73,8 @@ test.serial(
             'content-type': 'application/json',
             date: 'Fri, 30 Jul 2021 18:46:39 GMT',
             'gcdn-cache': 'MISS',
+            'gcdn-origin-status-code': '200',
+            'gcdn-origin-status-text': 'OK',
             'strict-transport-security':
               'max-age=31536000; includeSubdomains; preload',
             vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -103,6 +107,8 @@ test.serial(
       'content-type': 'application/json',
       date: 'Fri, 30 Jul 2021 18:46:39 GMT',
       'gcdn-cache': 'HIT',
+      'gcdn-origin-status-code': '200',
+      'gcdn-origin-status-text': 'OK',
       'strict-transport-security':
         'max-age=31536000; includeSubdomains; preload',
       vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',

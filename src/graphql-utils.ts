@@ -39,6 +39,7 @@ export function extractTypes(
   ast: DocumentNode,
 ): Set<string> {
   const types = new Set<string>()
+  types.add('Query') // by default available and can be used as "all" selector
 
   const typeInfo = new TypeInfo(schema)
 
@@ -81,11 +82,11 @@ export async function getClientSchema(
   return null
 }
 
-export async function fetchAndStoreSchema(introspectionUrl: string, headers: Headers) {
-  const schema = await getClientSchema(
-    introspectionUrl,
-    headers,
-  )
+export async function fetchAndStoreSchema(
+  introspectionUrl: string,
+  headers: Headers,
+) {
+  const schema = await getClientSchema(introspectionUrl, headers)
   if (schema) {
     await save(printSchema(schema))
   } else {
