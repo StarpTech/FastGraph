@@ -30,7 +30,15 @@ export function hasIntersectedTypes(
   document: DocumentNode,
   matchingTypes: string[],
 ): boolean {
-  const types = extractTypes(buildSchema(schemaString), document)
+  const types = extractTypes(
+    // perf: skip location and syntax validation
+    buildSchema(schemaString, {
+      noLocation: true,
+      assumeValid: true,
+      assumeValidSDL: true,
+    }),
+    document,
+  )
   return matchingTypes.some((typeName) => types.has(typeName))
 }
 
