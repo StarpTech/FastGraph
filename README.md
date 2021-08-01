@@ -90,13 +90,13 @@ Here are some sample response times using this app hosted on Fly vs. making requ
 
 Set the variables in your `wrangler.toml`.
 
-- `ORIGIN_URL`The url of your production backend you want your service to proxy to.
-- `DEFAULT_TTL` The default TTL (minimum 60s) of cacheable responses (_Default:_ `900`)
-- `PRIVATE_TYPES` The GraphQL types that indicates a private response (_Default:_ "", _Example:_ `"User,Profile"`)
-- `INJECT_ORIGIN_HEADERS` Should the origin headers be injected in the response? (_Default:_ Options:_ `"","1"`)
-- `SCOPE` The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
-- `IGNORE_ORIGIN_CACHE_HEADERS` Should the origin `cache-control` headers be respected? (_Default:_ `""`, _Options:_ `"","1"`)
-- `INTROSPECTION_URL` The url of your introspection endpoint. If you enable it a [cron-triggers](https://developers.cloudflare.com/workers/platform/cron-triggers) will fetch for the latest schema every 30 minutes. (_Default:_ `""`)
+- **ORIGIN_URL**: The url of your production backend you want your service to proxy to.
+- **DEFAULT_TTL**: The default TTL (minimum 60s) of cacheable responses (_Default:_ `900`)
+- **PRIVATE_TYPES**: The GraphQL types that indicates a private response (_Default:_ "", _Example:_ `"User,Profile"`)
+- **INJECT_ORIGIN_HEADERS**: Should the origin headers be injected in the response? (_Default:_ Options:_ `"","1"`)
+- **SCOPE**: The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
+- **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be respected? (_Default:_ `""`, _Options:_ `"","1"`)
+- **INTROSPECTION_URL**: The url of your introspection endpoint. If you enable it a [cron-triggers](https://developers.cloudflare.com/workers/platform/cron-triggers) will fetch for the latest schema every 30 minutes. (_Default:_ `""`)
 
 ## Performance & Security
 
