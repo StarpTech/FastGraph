@@ -9,6 +9,8 @@ import {
   buildClientSchema,
   validateSchema,
   printSchema,
+  isScalarType,
+  getNamedType,
 } from 'graphql'
 import { save } from './stores/Schema'
 import { Headers as HTTPHeaders } from './utils'
@@ -56,7 +58,11 @@ export function extractTypes(
       Field() {
         const field = typeInfo.getFieldDef()
         if (field) {
-          types.add(field.type.toString())
+          const namedType = getNamedType(field.type)
+          const scalar = isScalarType(namedType)
+          if (!scalar) {
+            types.add(namedType.name)
+          }
         }
       },
     }),
@@ -97,7 +103,7 @@ export async function fetchAndStoreSchema(
 ) {
   const schema = await getClientSchema(introspectionUrl, headers)
   if (schema) {
-    await save(printSchema(schema))
+    await save(stripIgnoredCharacters(printSchema(schema)))
   } else {
     throw new Error('Schema could not updated from introspection endpoint')
   }

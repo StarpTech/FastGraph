@@ -225,10 +225,10 @@ export const mockFetch = (json: any, headers: { [s: string]: any }) => {
   }
 }
 
-export const getKVEntries = (m: Map<string, any>) => {
+export const getKVEntries = (m: Map<string, any>, json = true) => {
   const obj: { [k: string]: any } = {}
   for (const [key, val] of m) {
-    obj[key] = JSON.parse(val)
+    obj[key] = json ? JSON.parse(val) : val
   }
   return obj
 }

@@ -16,7 +16,13 @@ test.serial(
     createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
     let req = WorktopRequest('POST', {
-      query: '{ stationWithEvaId(evaId: 8000105) { name } }',
+      query: /* GraphQL */ `
+        {
+          stationWithEvaId(evaId: 8000105) {
+            name
+          }
+        }
+      `,
     })
     let res = WorktopResponse()
 
