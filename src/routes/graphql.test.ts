@@ -290,7 +290,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 })
 
 test.serial(
-  'Should fail when origin does not respond with propert json content-type',
+  'Should fail when origin does not respond with proper json content-type',
   async (t) => {
     const KV = new Map()
     const KV_METADATA = new Map()
