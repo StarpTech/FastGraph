@@ -79,11 +79,13 @@ export async function getClientSchema(
     method: 'POST',
   })
   const { data } = await resp.json()
-  const schema = buildClientSchema(data)
-  const validation = validateSchema(schema)
-
-  if (validation.length === 0) {
-    return schema
+  if (data && !data.errors) {
+    const schema = buildClientSchema(data)
+    const errors = validateSchema(schema)
+  
+    if (errors.length === 0) {
+      return schema
+    }
   }
 
   return null
