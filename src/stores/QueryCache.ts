@@ -32,6 +32,7 @@ export function remove(pqKey: string) {
 export function save(uid: string, result: CachedQuery, expirationTtl: number) {
   const key = key_item(uid)
 
+  // ttl must be at least 60s (cf requirement)
   expirationTtl = expirationTtl < 60 ? 60 : expirationTtl
 
   return DB.write(QUERY_CACHE, key, result, {

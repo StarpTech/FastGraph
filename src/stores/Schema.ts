@@ -4,6 +4,10 @@ import type { KV } from 'worktop/kv'
 // cloudflare global kv binding
 declare const GRAPHQL_SCHEMA: KV.Namespace
 
+export interface Metadata {
+  updatedAt: number
+}
+
 const latestKey = `graphql-schema::latest`
 
 export function latest() {
@@ -11,5 +15,9 @@ export function latest() {
 }
 
 export function save(schema: string) {
-  return DB.write(GRAPHQL_SCHEMA, latestKey, schema)
+  return DB.write<string, Metadata>(GRAPHQL_SCHEMA, latestKey, schema, {
+    metadata: {
+      updatedAt: Date.now(),
+    },
+  })
 }
