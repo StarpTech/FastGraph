@@ -194,7 +194,6 @@ export const graphql: Handler = async function (req, res) {
 
   if (contentType?.includes('application/json')) {
     const originResult = await originResponse.json()
-    const results = JSON.stringify(originResult)
 
     if (isCacheable) {
       let maxAge = defaultMaxAgeInSeconds
@@ -228,7 +227,7 @@ export const graphql: Handler = async function (req, res) {
         querySignature,
         {
           headers,
-          body: results,
+          body: originResult,
         },
         maxAge,
       )
@@ -237,11 +236,11 @@ export const graphql: Handler = async function (req, res) {
         console.error('query could not be stored in cache')
       }
 
-      return res.send(200, results, headers)
+      return res.send(200, originResult, headers)
     }
 
     // First call or mutation requests
-    return res.send(200, results, {
+    return res.send(200, originResult, {
       ...(injectOriginHeaders ? originHeaders : undefined),
       ...defaultResponseHeaders,
       [Headers.gcdnCache]: CacheHitHeader.PASS,

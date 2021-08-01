@@ -11,7 +11,7 @@ export interface Metadata {
 
 export interface CachedQuery {
   headers: Record<string, string>
-  body: string
+  body: unknown
 }
 
 export const key_item = (uid: string) => `query-cache::${uid}`

@@ -79,12 +79,14 @@ export const WorktopResponse = () => {
     },
     setHeader: headers.set,
     get body() {
-      return body
+      return JSON.stringify(body)
     },
-    send: (code, payload, h: { [s: string]: string }) => {
+    send: (code, payload, h?: { [s: string]: string }) => {
       statusCode = code
       body = payload
-      headers = new globalThis.Headers(Object.entries(h))
+      if (h) {
+        headers = new globalThis.Headers(Object.entries(h))
+      }
     },
     end(val: any) {
       finished = true
@@ -149,9 +151,15 @@ export const NewKVNamespace = (
     metadata.set(key, m)
     return Promise.resolve()
   }
-  binding.getWithMetadata = async (key: string, options: { metadata: boolean; type: string }) => {
+  binding.getWithMetadata = async (
+    key: string,
+    options: { metadata: boolean; type: string },
+  ) => {
     const m = metadata.get(key)
-    return { value: await binding.get(key, options.type), metadata: m?.metadata }
+    return {
+      value: await binding.get(key, options.type),
+      metadata: m?.metadata,
+    }
   }
   // @ts-ignore
   globalThis[bindingConfig.name] = binding
@@ -198,7 +206,7 @@ globalThis.fetch = async function Fetch(url: RequestInfo, init?: RequestInit) {
   }
 }
 
-export const mockFetch = (json: any, headers: { [s: string]: any }) => {
+export const mockFetch = (json: any, headers: { [s: string]: any } = new globalThis.Headers()) => {
   // @ts-ignore
   const oldFetch = globalThis.fetch
 
