@@ -23,7 +23,8 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 
 ### Cache authenticated data
 
-When a GraphQL query contains one of the GraphQL types defined in `PRIVATE_TYPES=User` the response is handled in user scope. The _Authorization_ header is respected in the cache key to avoid exposing user-sensitive content. In order to use this feature, you have to provide your latest GraphQL schema. We provide two options:
+You can change the cache scope to `AUTHENTICATED` to enforce all requests are cached in relation to the _Authorization_ header.
+A more powerful feature is to mark specifc GraphQL types as private. In this way a GraphQL query that contains the following types `PRIVATE_TYPES=User` is handled as `AUTHENTICATED`. This can increase you cache hit rate dramatically. In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We provide two options:
 
 1. Push the schema manually to cloudflare.
 
@@ -33,7 +34,7 @@ wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA
 
 2. Set the `INTROSPECTION_URL` variable and the schema is synchronized every minute. The endpoint must be publicly available.
 
-When no schema was provided or no type was matched the request is always cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
+By default when no schema was provided or no type was matched the request is always cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
 ## Getting Started
 
@@ -53,7 +54,7 @@ npm run deploy
 ```sh
 curl --request POST \
   --compressed \
-  --url https://countries.trevorblades.com/ \
+  --url https://graphcdn.starptech.workers.dev \
   --header 'Accept-Encoding: gzip' \
   --header 'Content-Type: application/json' \
   --data '{"query":"{\n  continents {\n    code\n  }\n  languages {\n    name\n  }\n}"}'
