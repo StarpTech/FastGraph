@@ -91,7 +91,7 @@ curl --request POST \
 
 ## Latency Results
 
-Here are some sample response times using this app hosted on Fly vs. making requests to the Open Library API directly:
+Here are some sample response times using GraphCDN vs. making requests to the Gitlab GraphQL API directly:
 
 | Request Method                               | Test 1 | Test 2 | Test 3 |
 | -------------------------------------------- | ------ | ------ | ------ |
