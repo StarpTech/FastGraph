@@ -11,7 +11,10 @@
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ava",
       "runtimeArgs": ["--serial", "${file}"],
       "outputCapture": "std",
-      "skipFiles": ["<node_internals>/**/*.js", "${workspaceFolder}/node_modules/**/*.js"]
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     }
   ]
 }

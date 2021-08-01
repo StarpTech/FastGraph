@@ -103,7 +103,7 @@ export async function fetchAndStoreSchema(
 ) {
   const schema = await getClientSchema(introspectionUrl, headers)
   if (schema) {
-    await save(stripIgnoredCharacters(printSchema(schema)))
+    await save(normalizeDocument(printSchema(schema)))
   } else {
     throw new Error('Schema could not updated from introspection endpoint')
   }

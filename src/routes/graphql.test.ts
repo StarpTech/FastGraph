@@ -1,4 +1,5 @@
 import test from 'ava'
+import { readFileSync } from 'fs'
 import {
   createKVNamespaces,
   getKVEntries,
@@ -8,6 +9,15 @@ import {
 } from '../test-utils'
 import { graphql } from './graphql'
 
+const droidWithArg = readFileSync(
+  './testdata/queries/droid_with_arg.graphql',
+  'utf8',
+)
+const createReview = readFileSync(
+  './testdata/mutations/create_review.graphql',
+  'utf8',
+)
+
 test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
@@ -16,27 +26,14 @@ test.serial(
     createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
     let req = WorktopRequest('POST', {
-      query: /* GraphQL */ `
-        {
-          stationWithEvaId(evaId: 8000105) {
-            name
-          }
-        }
-      `,
+      query: droidWithArg,
     })
     let res = WorktopResponse()
 
     const originResponseJson = {
       data: {
-        stationWithEvaId: {
-          name: 'Frankfurt (Main) Hbf',
-          location: {
-            latitude: 50.107145,
-            longitude: 8.663789,
-          },
-          picture: {
-            url: 'https://api.railway-stations.org/photos/de/1866.jpg',
-          },
+        droid: {
+          name: 'R2-D2',
         },
       },
     }
@@ -80,7 +77,7 @@ test.serial(
     })
 
     t.deepEqual(kvEntries, {
-      'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
         {
           body: originResponseJson,
           headers: {
@@ -91,7 +88,7 @@ test.serial(
         },
     })
     t.deepEqual(metadataEntries, {
-      'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
         {
           expirationTtl: 900,
           metadata: {
@@ -136,17 +133,15 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
   let req = WorktopRequest('POST', {
-    query: /* GraphQL */ `
-      mutation {
-        createTodo(item: "foo")
-      }
-    `,
+    query: createReview,
   })
   let res = WorktopResponse()
 
   const originResponseJson = {
     data: {
-      createTodo: true,
+      createReview: {
+        id: 1,
+      },
     },
   }
   const originResponse = JSON.stringify(originResponseJson)
@@ -205,27 +200,14 @@ test.serial('Should respect max-age directive from origin', async (t) => {
   createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
   let req = WorktopRequest('POST', {
-    query: /* GraphQL */ `
-      {
-        stationWithEvaId(evaId: 8000105) {
-          name
-        }
-      }
-    `,
+    query: droidWithArg,
   })
   let res = WorktopResponse()
 
   const originResponseJson = {
     data: {
-      stationWithEvaId: {
-        name: 'Frankfurt (Main) Hbf',
-        location: {
-          latitude: 50.107145,
-          longitude: 8.663789,
-        },
-        picture: {
-          url: 'https://api.railway-stations.org/photos/de/1866.jpg',
-        },
+      droid: {
+        name: 'R2-D2',
       },
     },
   }
@@ -252,7 +234,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
   )
 
   t.like(kvEntries, {
-    'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
+    'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
       {
         body: originResponseJson,
         headers: {
@@ -264,7 +246,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
       },
   })
   t.deepEqual(metadataEntries, {
-    'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
+    'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
       {
         expirationTtl: 65,
         metadata: {
@@ -297,13 +279,7 @@ test.serial(
     createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
     let req = WorktopRequest('POST', {
-      query: /* GraphQL */ `
-        {
-          stationWithEvaId(evaId: 8000105) {
-            name
-          }
-        }
-      `,
+      query: droidWithArg,
     })
     let res = WorktopResponse()
 

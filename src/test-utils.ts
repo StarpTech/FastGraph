@@ -206,7 +206,10 @@ globalThis.fetch = async function Fetch(url: RequestInfo, init?: RequestInit) {
   }
 }
 
-export const mockFetch = (json: any, headers: { [s: string]: any } = new globalThis.Headers()) => {
+export const mockFetch = (
+  json: any,
+  headers: { [s: string]: any } = new globalThis.Headers(),
+) => {
   // @ts-ignore
   const oldFetch = globalThis.fetch
 

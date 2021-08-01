@@ -64,12 +64,14 @@ export const graphql: Handler = async function (req, res) {
       'max-age=31536000; includeSubdomains; preload',
   }
 
-  const queryDocumentNode = parse(originalBody.query, { noLocation: true })
+  let queryDocumentNode = null
   let hasPrivateTypes = false
   let isMutationRequest = false
   let content = undefined
 
   try {
+    queryDocumentNode = parse(originalBody.query, { noLocation: true })
+
     if (privateTypes.length > 0) {
       const schema = await latest()
 
@@ -96,12 +98,12 @@ export const graphql: Handler = async function (req, res) {
   const isPrivateAndCacheable =
     isMutationRequest === false &&
     (hasPrivateTypes || scope === Scope.AUTHENTICATED)
-  let querySignature = ''
 
   /**
    *  In case of the query will return user specific data the response
    *  is cached user specific based on the Authorization header
    */
+  let querySignature = ''
   if (isPrivateAndCacheable) {
     querySignature = await SHA256(authHeader + content)
   } else if (isMutationRequest === false) {
@@ -136,14 +138,16 @@ export const graphql: Handler = async function (req, res) {
 
   /**
    * Refresh content from origin
+   * In case of an error we will retry
    */
   let originResponse = null
 
   try {
+    const body = JSON.stringify(originalBody)
     originResponse = await retry(
       async () => {
         const resp = await fetch(originUrl, {
-          body: JSON.stringify(originalBody),
+          body,
           headers: req.headers,
           method: req.method,
         })
@@ -156,7 +160,8 @@ export const graphql: Handler = async function (req, res) {
       },
       {
         retries: 5,
-        maxTimeout: 5000,
+        unref: true,
+        maxTimeout: 1000,
       },
     )
   } catch (error) {
@@ -175,6 +180,7 @@ export const graphql: Handler = async function (req, res) {
         },
       )
     }
+    // will call the onerror handler
     throw error
   }
 

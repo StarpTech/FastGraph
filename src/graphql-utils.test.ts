@@ -7,82 +7,42 @@ import {
   introspectionQuery,
 } from './graphql-utils'
 import { createKVNamespaces, getKVEntries, mockFetch } from './test-utils'
+import { readFileSync } from 'fs'
+
+const testSchema = readFileSync('./testdata/star_wars.graphql', 'utf8')
+const droidWithArg = readFileSync(
+  './testdata/queries/droid_with_arg.graphql',
+  'utf8',
+)
+const simpleHero = readFileSync(
+  './testdata/queries/simple_hero.graphql',
+  'utf8',
+)
 
 test('extractTypes', async (t) => {
-  let ids = extractTypes(
-    buildSchema(/* GraphQL */ `
-      type Station {
-        id: ID!
-      }
-      type Query {
-        stationWithEvaId: Station
-      }
-    `),
-    parse(/* GraphQL */ `
-      {
-        stationWithEvaId {
-          id
-        }
-      }
-    `),
-  )
-  t.deepEqual([...ids], ['Station'])
+  let ids = extractTypes(buildSchema(testSchema), parse(droidWithArg))
+  t.deepEqual([...ids], ['Droid'])
 })
 
 test('hasIntersectedTypes - matching', async (t) => {
-  const schema = /* GraphQL */ `
-    type Station {
-      id: ID!
-    }
-    type Query {
-      stationWithEvaId: Station
-    }
-  `
-  const document = parse(/* GraphQL */ `
-    {
-      stationWithEvaId {
-        id
-      }
-    }
-  `)
-  let match = hasIntersectedTypes(schema, document, ['Station'])
+  const document = parse(droidWithArg)
+  let match = hasIntersectedTypes(testSchema, document, ['Droid'])
   t.true(match)
 })
 
 test('hasIntersectedTypes - not matching', async (t) => {
-  const schema = /* GraphQL */ `
-    type Station {
-      id: ID!
-    }
-    type Query {
-      stationWithEvaId: Station
-    }
-  `
-  const document = parse(/* GraphQL */ `
-    {
-      stationWithEvaId {
-        id
-      }
-    }
-  `)
-  let match = hasIntersectedTypes(schema, document, ['ID'])
+  const document = parse(simpleHero)
+  let match = hasIntersectedTypes(testSchema, document, ['String'])
   t.false(match)
 })
 
-test.serial('fetchAndStoreSchema', async (t) => {
+test('fetchAndStoreSchema', async (t) => {
   const KV = new Map()
   const KV_METADATA = new Map()
   createKVNamespaces(['GRAPHQL_SCHEMA'], KV, KV_METADATA)
 
   const data = graphqlSync({
-    schema: buildSchema(/* GraphQL */ `
-      type Station {
-        id: ID!
-      }
-      type Query {
-        stationWithEvaId: Station
-      }
-    `),
+    schema: buildSchema(testSchema),
     source: introspectionQuery,
   })
   const m = mockFetch(data, {
@@ -94,6 +54,7 @@ test.serial('fetchAndStoreSchema', async (t) => {
 
   const kvEntries = getKVEntries(KV, false)
   t.deepEqual(kvEntries, {
-    'graphql-schema::latest': `type Station{id:ID!}type Query{stationWithEvaId:Station}`,
+    'graphql-schema::latest':
+      'union SearchResult=Human|Droid|Starship type Query{hero:Character droid(id:ID!):Droid search(name:String!):SearchResult}type Mutation{createReview(episode:Episode!review:ReviewInput!):Review}type Subscription{remainingJedis:Int!}input ReviewInput{stars:Int!commentary:String}type Review{id:ID!stars:Int!commentary:String}enum Episode{NEWHOPE EMPIRE JEDI}interface Character{name:String!friends:[Character]}type Human implements Character{name:String!height:String!friends:[Character]}type Droid implements Character{name:String!primaryFunction:String!friends:[Character]}type Starship{name:String!length:Float!}',
   })
 })
