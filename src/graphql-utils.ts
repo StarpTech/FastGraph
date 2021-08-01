@@ -82,7 +82,7 @@ export async function getClientSchema(
   if (data && !data.errors) {
     const schema = buildClientSchema(data)
     const errors = validateSchema(schema)
-  
+
     if (errors.length === 0) {
       return schema
     }
@@ -99,7 +99,7 @@ export async function fetchAndStoreSchema(
   if (schema) {
     await save(printSchema(schema))
   } else {
-    console.log('schema is not valid')
+    throw new Error('Schema could not updated from introspection endpoint')
   }
 }
 

@@ -34,7 +34,7 @@ wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA
 
 2. Set the `INTROSPECTION_URL` variable and the schema is synchronized every minute. The endpoint must be publicly available.
 
-By default when no schema was provided or no type was matched the request is always cached as long as your origin respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
+By default when no schema was provided or no type was matched the request is always cached as long as your origin doesn't respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
 ## Getting Started
 
