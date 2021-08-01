@@ -34,6 +34,7 @@ test.serial(
         },
       },
     }
+    const originResponse = JSON.stringify(originResponseJson)
 
     const m = mockFetch(originResponseJson, {
       'content-type': 'application/json',
@@ -43,7 +44,11 @@ test.serial(
     await graphql(req, res)
 
     t.is(res.statusCode, 200)
-    t.deepEqual(res.body, JSON.stringify(originResponseJson))
+    t.deepEqual(res.body, originResponse)
+
+    let headers = Object.fromEntries(res.headers)
+    const kvEntries = getKVEntries(KV)
+    const metadataEntries = Object.fromEntries(KV_METADATA)
 
     const graphCDNHeaders = {
       'cache-control':
@@ -61,16 +66,16 @@ test.serial(
       'x-robots-tag': 'noindex',
     }
 
-    t.deepEqual(Object.fromEntries(res.headers), {
+    t.deepEqual(headers, {
       ...graphCDNHeaders,
       'gcdn-cache': 'MISS',
       'x-cache': 'MISS',
     })
 
-    t.deepEqual(getKVEntries(KV), {
+    t.deepEqual(kvEntries, {
       'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
         {
-          body: JSON.stringify(originResponseJson),
+          body: originResponse,
           headers: {
             ...graphCDNHeaders,
             'gcdn-cache': 'MISS',
@@ -78,7 +83,7 @@ test.serial(
           },
         },
     })
-    t.deepEqual(Object.fromEntries(KV_METADATA), {
+    t.deepEqual(metadataEntries, {
       'query-cache::4f635b8e3af1cd8b0f984720fa72e03acef1e292916227676a96f5ad4141dca7':
         {
           expirationTtl: 900,
@@ -93,7 +98,9 @@ test.serial(
     await graphql(req, res)
     t.is(res.statusCode, 200)
 
-    t.deepEqual(Object.fromEntries(res.headers), {
+    headers = Object.fromEntries(res.headers)
+
+    t.deepEqual(headers, {
       ...graphCDNHeaders,
       age: '0',
       'gcdn-cache': 'HIT',
