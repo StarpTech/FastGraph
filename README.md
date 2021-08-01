@@ -24,7 +24,7 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 ### Cache authenticated data
 
 You can change the cache scope to `AUTHENTICATED` to enforce all requests are cached in relation to the _Authorization_ header.
-A more powerful feature is to mark specifc GraphQL types as private. In this way a GraphQL query that contains the following types `PRIVATE_TYPES=User` is handled as `AUTHENTICATED`. This can increase you cache hit rate dramatically. In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We provide two options:
+A more powerful feature is to mark specifc GraphQL types as private. In this way a GraphQL query that contains the following types `PRIVATE_TYPES=User` is handled as scope:`AUTHENTICATED`. This can increase your cache hit rate dramatically. In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We provide two options:
 
 1. Push the schema manually to cloudflare.
 
