@@ -86,8 +86,6 @@ Here are some sample response times using this app hosted on Fly vs. making requ
 | [Gitlab API](https://gitlab.com/api/graphql) | 0.90s  | 1.01s  | 1.08s  |
 | With GraphCDN                                | 0.15s  | 0.13s  | 0.11s  |
 
-Cache GraphQL requests from [Gitlab API](https://gitlab.com/api/graphql). Before `~1s` after `~35ms`.
-
 ## Configuration
 
 Set the variables in your `wrangler.toml`.
