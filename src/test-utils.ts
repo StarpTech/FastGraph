@@ -9,9 +9,11 @@ globalThis.DEFAULT_TTL = '900'
 // @ts-ignore
 globalThis.PRIVATE_TYPES = ''
 // @ts-ignore
-globalThis.INJECT_HEADERS = ''
+globalThis.INJECT_ORIGIN_HEADERS = ''
 // @ts-ignore
 globalThis.SCOPE = ''
+// @ts-ignore
+globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
 
 globalThis.crypto = {
   // @ts-ignore

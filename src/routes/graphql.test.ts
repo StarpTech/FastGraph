@@ -58,6 +58,7 @@ test.serial(
       date: 'Fri, 30 Jul 2021 18:46:39 GMT',
       'gcdn-origin-status-code': '200',
       'gcdn-origin-status-text': 'OK',
+      'gcdn-origin-ignore-cache-headers': 'false',
       'gcdn-scope': 'PUBLIC',
       'strict-transport-security':
         'max-age=31536000; includeSubdomains; preload',

@@ -13,12 +13,13 @@ kv_namespaces = [
 ]
 
 [vars]
-ORIGIN_URL = "https://countries.trevorblades.com/"
-INTROSPECTION_URL = "https://countries.trevorblades.com/"
+ORIGIN_URL = "https://gitlab.com/api/graphql"
+INTROSPECTION_URL = "https://gitlab.com/api/graphql"
 SCOPE = "PUBLIC"
+IGNORE_ORIGIN_CACHE_HEADERS = ""
 DEFAULT_TTL = "900"
 PRIVATE_TYPES = ""
-INJECT_HEADERS = ""
+INJECT_ORIGIN_HEADERS = ""
 
 [dev]
 ip = "0.0.0.0"

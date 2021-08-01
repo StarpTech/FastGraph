@@ -21,14 +21,16 @@ import { HTTPResponseError } from '../errors'
 declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
 declare const PRIVATE_TYPES: string
-declare const INJECT_HEADERS: string
+declare const INJECT_ORIGIN_HEADERS: string
 declare const SCOPE: string
+declare const IGNORE_ORIGIN_CACHE_HEADERS: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : []
-const injectHeaders = !!INJECT_HEADERS
+const injectOriginHeaders = !!INJECT_ORIGIN_HEADERS
 const scope: Scope = SCOPE as Scope
+const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
 
 type GraphQLRequest = {
   query: string
@@ -50,6 +52,9 @@ export const graphql: Handler = async function (req, res) {
     [Headers.date]: new Date(Date.now()).toUTCString(),
     [Headers.xCache]: CacheHitHeader.MISS,
     [Headers.gcdnCache]: CacheHitHeader.MISS,
+    [Headers.gcdnOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
+      ? 'true'
+      : 'false',
     [Headers.xFrameOptions]: 'deny',
     [Headers.xRobotsTag]: 'noindex',
     [Headers.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -178,9 +183,11 @@ export const graphql: Handler = async function (req, res) {
   defaultResponseHeaders[Headers.gcdnOriginStatusText] =
     originResponse.statusText.toString()
 
+  const isOriginResponseCacheable =
+    isResponseCachable(originResponse) || ignoreOriginCacheHeaders
   const isCacheable =
-    (isMutationRequest === false && isResponseCachable(originResponse)) ||
-    isPrivateAndCacheable
+    (isMutationRequest === false && isOriginResponseCacheable) ||
+    (isOriginResponseCacheable && isPrivateAndCacheable)
 
   const contentType = originResponse.headers.get(Headers.contentType)
   const originHeaders = Object.fromEntries(originResponse.headers)
@@ -188,23 +195,23 @@ export const graphql: Handler = async function (req, res) {
   if (contentType?.includes('application/json')) {
     const originResult = await originResponse.json()
     const results = JSON.stringify(originResult)
-    const maxAgeHeaderValue = originResponse.headers.get(Headers.cacheControl)
 
     if (isCacheable) {
       let maxAge = defaultMaxAgeInSeconds
-      if (maxAgeHeaderValue) {
-        const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
-        maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
+      const maxAgeHeaderValue = originResponse.headers.get(Headers.cacheControl)
+      if (ignoreOriginCacheHeaders === false) {
+        if (maxAgeHeaderValue) {
+          const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
+          maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
+        }
       }
 
       const headers: Record<string, string> = {
         [Headers.gcdnCache]: CacheHitHeader.PASS,
         [Headers.xCache]: CacheHitHeader.PASS,
         [Headers.gcdnScope]: Scope.PUBLIC,
-        [
-          Headers.cacheControl
-        ]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
-        ...(injectHeaders ? originHeaders : undefined),
+        [Headers.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
+        ...(injectOriginHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }
 
@@ -235,7 +242,7 @@ export const graphql: Handler = async function (req, res) {
 
     // First call or mutation requests
     return res.send(200, results, {
-      ...(injectHeaders ? originHeaders : undefined),
+      ...(injectOriginHeaders ? originHeaders : undefined),
       ...defaultResponseHeaders,
       [Headers.gcdnCache]: CacheHitHeader.PASS,
     })

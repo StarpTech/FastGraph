@@ -3,6 +3,7 @@ export enum Headers {
   gcdnCache = 'gcdn-cache',
   gcdnOriginStatusCode = 'gcdn-origin-status-code',
   gcdnOriginStatusText = 'gcdn-origin-status-text',
+  gcdnOriginIgnoreCacheHeaders = 'gcdn-origin-ignore-cache-headers',
   gcdnScope = 'gcdn-scope',
 
   // Common
@@ -32,7 +33,7 @@ export enum Headers {
 
 export enum Scope {
   AUTHENTICATED = 'AUTHENTICATED',
-  PUBLIC = 'PUBLIC'
+  PUBLIC = 'PUBLIC',
 }
 
 export enum CacheHitHeader {
