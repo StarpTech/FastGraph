@@ -1,7 +1,9 @@
 import type { Handler } from 'worktop'
 import { SHA256, timingSafeEqual } from 'worktop/crypto'
+import { isCacheable } from 'worktop/cache'
 import { find, save } from '../stores/APQCache'
-import { Headers as HTTPHeaders, parseMaxAge } from '../utils'
+import { CacheHitHeader, Headers as HTTPHeaders, parseMaxAge } from '../utils'
+import { HTTPResponseError } from '../errors'
 
 declare const DEFAULT_TTL: string
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
@@ -75,6 +77,10 @@ export const apq: Handler = async function (req, res) {
     method: 'POST',
   })
 
+  if (!originResponse.ok) {
+    throw new HTTPResponseError(originResponse)
+  }
+
   let maxAge = defaultMaxAgeInSeconds
   const maxAgeHeaderValue = originResponse.headers.get(HTTPHeaders.cacheControl)
 
@@ -88,6 +94,7 @@ export const apq: Handler = async function (req, res) {
     [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
     [HTTPHeaders.gcdnOriginStatusCode]: originResponse.status.toString(),
     [HTTPHeaders.gcdnOriginStatusText]: originResponse.statusText.toString(),
+    [HTTPHeaders.gcdnCache]: isCacheable(originResponse) ? CacheHitHeader.HIT : CacheHitHeader.MISS,
   }
 
   return res.send(200, await originResponse.json(), headers)
