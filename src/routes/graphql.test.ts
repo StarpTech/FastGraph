@@ -19,6 +19,10 @@ const createReview = readFileSync(
   './testdata/mutations/create_review.graphql',
   'utf8',
 )
+const simpleHero = readFileSync(
+  './testdata/queries/simple_hero.graphql',
+  'utf8',
+)
 
 test.serial(
   'Should call origin and cache on subsequent requests',
@@ -273,19 +277,19 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   })
 })
 
-test.only('Should respect max-age directive from origin', async (t) => {
+test.serial('Should respect max-age directive from origin', async (t) => {
   const { store: queryStore, metadata } = NewKVNamespace({
     name: 'QUERY_CACHE',
   })
 
   let req = WorktopRequest('POST', {
-    query: droidWithArg,
+    query: simpleHero,
   })
   let res = WorktopResponse()
 
   const originResponseJson = {
     data: {
-      droid: {
+      hero: {
         name: 'R2-D2',
       },
     },
@@ -313,7 +317,7 @@ test.only('Should respect max-age directive from origin', async (t) => {
   )
 
   t.like(kvEntries, {
-    'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
       {
         body: originResponseJson,
         headers: {
@@ -325,7 +329,7 @@ test.only('Should respect max-age directive from origin', async (t) => {
       },
   })
   t.deepEqual(metadataEntries, {
-    'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
       {
         expirationTtl: 65,
         metadata: {

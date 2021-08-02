@@ -15,7 +15,7 @@ globalThis.SCOPE = ''
 // @ts-ignore
 globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
 // @ts-ignore
-globalThis.AUTH_DIRECTIVE = ''
+globalThis.AUTH_DIRECTIVE = 'auth'
 // @ts-ignore
 globalThis.SCHEMA_STRING = ''
 // @ts-ignore
