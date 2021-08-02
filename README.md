@@ -23,8 +23,11 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 
 ### Cache authenticated data
 
-You can change the cache scope to `AUTHENTICATED` to enforce all requests are cached in relation to the _Authorization_ header.
-A more powerful feature is to mark specific GraphQL types as private. In this way a GraphQL query that contains e.g the following types `PRIVATE_TYPES=User,Profile` is handled as scope `AUTHENTICATED`. This can increase your cache hit rate dramatically. In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We support two options:
+We provide different features to work with authenticated data:
+
+1. `SCOPE=AUTHENTICATED` This will enforce to cache all requests in relation to the _Authorization_ header.
+2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` directive that handles the request as scope `AUTHENTICATED`.
+3. `PRIVATE_TYPES=User,Profile` A more powerful feature is to mark specific GraphQL types as private. In this way a GraphQL query that contains private types is handled as scope `AUTHENTICATED` In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We support two options:
 
 1. Push the schema manually to cloudflare.
 
@@ -56,6 +59,7 @@ Set the variables in your `wrangler.toml`.
 - **ORIGIN_URL**: The url of your production backend you want your service to proxy to.
 - **DEFAULT_TTL**: The default TTL (minimum 60s) of cacheable responses (_Default:_ `900`)
 - **PRIVATE_TYPES**: The GraphQL types that indicates a private response (_Default:_ `""`, _Example:_ `"User,Profile"`)
+- **AUTH_DIRECTIVE**: The GraphQL directive on object or field definition that marks the request as private (_Default:_ `""`)
 - **INJECT_ORIGIN_HEADERS**: Should the origin headers be injected in the response? (_Default:_ `""` _Options:_ `"","1"`)
 - **SCOPE**: The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
 - **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be ignored? (_Default:_ `""`, _Options:_ `"","1"`)

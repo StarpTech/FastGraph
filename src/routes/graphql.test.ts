@@ -1,14 +1,18 @@
 import test from 'ava'
 import { readFileSync } from 'fs'
+import { latestKey } from '../stores/Schema'
 import {
   createKVNamespaces,
   getKVEntries,
   mockFetch,
+  NewKVNamespace,
   WorktopRequest,
   WorktopResponse,
 } from '../test-utils'
+import { CacheHitHeader, Headers, Scope } from '../utils'
 import { graphql } from './graphql'
 
+const testSchema = readFileSync('./testdata/star_wars.graphql', 'utf8')
 const droidWithArg = readFileSync(
   './testdata/queries/droid_with_arg.graphql',
   'utf8',
@@ -54,26 +58,26 @@ test.serial(
     const metadataEntries = Object.fromEntries(KV_METADATA)
 
     const graphCDNHeaders = {
-      'cache-control':
+      [Headers.cacheControl]:
         'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
-      'content-security-policy': "default-src 'none'",
-      'content-type': 'application/json',
-      date: 'Fri, 30 Jul 2021 18:46:39 GMT',
-      'gcdn-origin-status-code': '200',
-      'gcdn-origin-status-text': 'OK',
-      'gcdn-origin-ignore-cache-headers': 'false',
-      'gcdn-scope': 'PUBLIC',
-      'strict-transport-security':
+      [Headers.contentSecurityPolicy]: "default-src 'none'",
+      [Headers.contentType]: 'application/json',
+      [Headers.date]: 'Fri, 30 Jul 2021 18:46:39 GMT',
+      [Headers.gcdnOriginStatusCode]: '200',
+      [Headers.gcdnOriginStatusText]: 'OK',
+      [Headers.gcdnOriginIgnoreCacheHeaders]: 'false',
+      [Headers.gcdnScope]: Scope.PUBLIC,
+      [Headers.strictTransportSecurity]:
         'max-age=31536000; includeSubdomains; preload',
-      vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
-      'x-frame-options': 'deny',
-      'x-robots-tag': 'noindex',
+      [Headers.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
+      [Headers.xFrameOptions]: 'deny',
+      [Headers.xRobotsTag]: 'noindex',
     }
 
     t.deepEqual(headers, {
       ...graphCDNHeaders,
-      'gcdn-cache': 'MISS',
-      'x-cache': 'MISS',
+      [Headers.gcdnCache]: CacheHitHeader.MISS,
+      [Headers.xCache]: CacheHitHeader.MISS,
     })
 
     t.deepEqual(kvEntries, {
@@ -82,8 +86,8 @@ test.serial(
           body: originResponseJson,
           headers: {
             ...graphCDNHeaders,
-            'gcdn-cache': 'MISS',
-            'x-cache': 'MISS',
+            [Headers.gcdnCache]: CacheHitHeader.MISS,
+            [Headers.xCache]: CacheHitHeader.MISS,
           },
         },
     })
@@ -106,9 +110,104 @@ test.serial(
 
     t.deepEqual(headers, {
       ...graphCDNHeaders,
-      age: '0',
-      'gcdn-cache': 'HIT',
-      'x-cache': 'HIT',
+      [Headers.gcdnScope]: Scope.PUBLIC,
+      [Headers.age]: '0',
+      [Headers.gcdnCache]: CacheHitHeader.HIT,
+      [Headers.xCache]: CacheHitHeader.HIT,
+    })
+  },
+)
+
+test.serial(
+  'Should handle the request in scope AUTHENTICATED when "auth" directive was found',
+  async (t) => {
+    const { store: queryStore, metadata } = NewKVNamespace({
+      name: 'QUERY_CACHE',
+    })
+    const { store: schemaStore } = NewKVNamespace({
+      name: 'GRAPHQL_SCHEMA',
+    })
+    schemaStore.set(latestKey, testSchema)
+
+    let req = WorktopRequest('POST', {
+      query: droidWithArg,
+    })
+    let res = WorktopResponse()
+
+    const originResponseJson = {
+      data: {
+        droid: {
+          name: 'R2-D2',
+        },
+      },
+    }
+    const originResponse = JSON.stringify(originResponseJson)
+
+    const m = mockFetch(originResponseJson, {
+      'content-type': 'application/json',
+    }).mock()
+    t.teardown(() => m.revert())
+
+    await graphql(req, res)
+
+    t.is(res.statusCode, 200)
+    t.deepEqual(res.body, originResponse)
+
+    let headers = Object.fromEntries(res.headers)
+    const kvEntries = getKVEntries(queryStore)
+    const metadataEntries = Object.fromEntries(metadata)
+
+    t.like(headers, {
+      [Headers.gcdnScope]: Scope.AUTHENTICATED,
+      [Headers.cacheControl]:
+        'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      [Headers.vary]:
+        'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
+      [Headers.gcdnCache]: CacheHitHeader.MISS,
+      [Headers.xCache]: CacheHitHeader.MISS,
+    })
+
+    t.like(kvEntries, {
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+        {
+          body: originResponseJson,
+          headers: {
+            [Headers.gcdnScope]: Scope.AUTHENTICATED,
+            [Headers.cacheControl]:
+              'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+            [Headers.vary]:
+              'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
+            [Headers.gcdnCache]: CacheHitHeader.MISS,
+            [Headers.xCache]: CacheHitHeader.MISS,
+          },
+        },
+    })
+    t.like(metadataEntries, {
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+        {
+          expirationTtl: 900,
+          metadata: {
+            createdAt: 1627670799330,
+            expirationTtl: 900,
+          },
+          toJSON: true,
+        },
+    })
+
+    await graphql(req, res)
+    t.is(res.statusCode, 200)
+
+    headers = Object.fromEntries(res.headers)
+
+    t.like(headers, {
+      [Headers.gcdnScope]: Scope.AUTHENTICATED,
+      [Headers.vary]:
+        'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
+      'cache-control':
+        'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      [Headers.age]: '0',
+      [Headers.gcdnCache]: CacheHitHeader.HIT,
+      [Headers.xCache]: CacheHitHeader.HIT,
     })
   },
 )
@@ -160,23 +259,9 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   const kvEntries = getKVEntries(KV)
   const metadataEntries = Object.fromEntries(KV_METADATA)
 
-  const graphCDNHeaders = {
-    'content-security-policy': "default-src 'none'",
-    'content-type': 'application/json',
-    date: 'Fri, 30 Jul 2021 18:46:39 GMT',
-    'gcdn-origin-status-code': '200',
-    'gcdn-origin-status-text': 'OK',
-    'gcdn-origin-ignore-cache-headers': 'false',
-    'strict-transport-security': 'max-age=31536000; includeSubdomains; preload',
-    vary: 'Accept-Encoding, Accept, X-Requested-With, Origin',
-    'x-frame-options': 'deny',
-    'x-robots-tag': 'noindex',
-  }
-
-  t.deepEqual(headers, {
-    ...graphCDNHeaders,
-    'gcdn-cache': 'PASS',
-    'x-cache': 'MISS',
+  t.like(headers, {
+    [Headers.gcdnCache]: CacheHitHeader.PASS,
+    [Headers.xCache]: CacheHitHeader.MISS,
   })
 
   t.deepEqual(kvEntries, {})
@@ -187,10 +272,9 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
 
   headers = Object.fromEntries(res.headers)
 
-  t.deepEqual(headers, {
-    ...graphCDNHeaders,
-    'gcdn-cache': 'PASS',
-    'x-cache': 'MISS',
+  t.like(headers, {
+    [Headers.gcdnCache]: CacheHitHeader.PASS,
+    [Headers.xCache]: CacheHitHeader.MISS,
   })
 })
 
@@ -238,10 +322,10 @@ test.serial('Should respect max-age directive from origin', async (t) => {
       {
         body: originResponseJson,
         headers: {
-          'cache-control':
+          [Headers.cacheControl]:
             'public, max-age=65, stale-if-error=60, stale-while-revalidate=65',
-          'gcdn-cache': 'MISS',
-          'x-cache': 'MISS',
+          [Headers.gcdnCache]: CacheHitHeader.MISS,
+          [Headers.xCache]: CacheHitHeader.MISS,
         },
       },
   })
@@ -263,11 +347,11 @@ test.serial('Should respect max-age directive from origin', async (t) => {
   headers = Object.fromEntries(res.headers)
 
   t.like(headers, {
-    'cache-control':
+    [Headers.cacheControl]:
       'public, max-age=65, stale-if-error=60, stale-while-revalidate=65',
-    age: '0',
-    'gcdn-cache': 'HIT',
-    'x-cache': 'HIT',
+    [Headers.age]: '0',
+    [Headers.gcdnCache]: CacheHitHeader.HIT,
+    [Headers.xCache]: CacheHitHeader.HIT,
   })
 })
 

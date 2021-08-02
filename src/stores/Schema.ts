@@ -8,7 +8,7 @@ export interface Metadata {
   updatedAt: number
 }
 
-const latestKey = `graphql-schema::latest`
+export const latestKey = `graphql-schema::latest`
 
 export function latest() {
   return DB.read<string>(GRAPHQL_SCHEMA, latestKey, { type: 'text' })

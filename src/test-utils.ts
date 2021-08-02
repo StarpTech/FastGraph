@@ -14,6 +14,8 @@ globalThis.INJECT_ORIGIN_HEADERS = ''
 globalThis.SCOPE = ''
 // @ts-ignore
 globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+// @ts-ignore
+globalThis.AUTH_DIRECTIVE = 'auth'
 
 globalThis.crypto = {
   // @ts-ignore
@@ -164,7 +166,7 @@ export const NewKVNamespace = (
   // @ts-ignore
   globalThis[bindingConfig.name] = binding
 
-  return store
+  return { store, metadata }
 }
 
 // @ts-ignore - faking it

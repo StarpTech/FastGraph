@@ -5,12 +5,12 @@ import {
   TypeInfo,
   visitWithTypeInfo,
   GraphQLSchema,
-  buildSchema,
   buildClientSchema,
   validateSchema,
   printSchema,
   isScalarType,
   getNamedType,
+  BREAK,
 } from 'graphql'
 import { save } from './stores/Schema'
 import { Headers as HTTPHeaders } from './utils'
@@ -28,19 +28,11 @@ export const isMutation = (document: DocumentNode): boolean => {
 }
 
 export function hasIntersectedTypes(
-  schemaString: string,
+  schema: GraphQLSchema,
   document: DocumentNode,
   matchingTypes: string[],
 ): boolean {
-  const types = extractTypes(
-    // perf: skip location and syntax validation
-    buildSchema(schemaString, {
-      noLocation: true,
-      assumeValid: true,
-      assumeValidSDL: true,
-    }),
-    document,
-  )
+  const types = extractTypes(schema, document)
   return matchingTypes.some((typeName) => types.has(typeName))
 }
 
@@ -69,6 +61,32 @@ export function extractTypes(
   )
 
   return types
+}
+
+export function requiresAuth(
+  directiveName: string,
+  schema: GraphQLSchema,
+  ast: DocumentNode,
+): boolean {
+  const typeInfo = new TypeInfo(schema)
+  let hasAuthDirective = false
+
+  visit(
+    ast,
+    visitWithTypeInfo(typeInfo, {
+      Field() {
+        const field = typeInfo.getFieldDef()
+        if (field) {
+          hasAuthDirective = !!field.astNode?.directives?.some(
+            (d) => d.name.value === directiveName,
+          )
+          return BREAK
+        }
+      },
+    }),
+  )
+
+  return hasAuthDirective
 }
 
 export async function getClientSchema(

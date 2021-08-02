@@ -5,6 +5,7 @@ import {
   normalizeDocument,
   isMutation,
   hasIntersectedTypes,
+  requiresAuth,
 } from '../graphql-utils'
 import {
   Headers,
@@ -15,7 +16,7 @@ import {
 } from '../utils'
 import { find, save } from '../stores/QueryCache'
 import { latest } from '../stores/Schema'
-import { parse } from 'graphql'
+import { buildSchema, parse } from 'graphql'
 import { HTTPResponseError } from '../errors'
 
 declare const ORIGIN_URL: string
@@ -24,13 +25,15 @@ declare const PRIVATE_TYPES: string
 declare const INJECT_ORIGIN_HEADERS: string
 declare const SCOPE: string
 declare const IGNORE_ORIGIN_CACHE_HEADERS: string
+declare const AUTH_DIRECTIVE: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
-const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : []
+const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
 const injectOriginHeaders = !!INJECT_ORIGIN_HEADERS
 const scope: Scope = SCOPE as Scope
 const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
+const authDirectiveName = AUTH_DIRECTIVE
 
 type GraphQLRequest = {
   query: string
@@ -67,25 +70,42 @@ export const graphql: Handler = async function (req, res) {
   let queryDocumentNode = null
   let hasPrivateTypes = false
   let isMutationRequest = false
-  let content = undefined
+  let authRequired = false
+  let content = originalBody.query
 
   try {
     queryDocumentNode = parse(originalBody.query, { noLocation: true })
-
-    if (privateTypes.length > 0) {
-      const schema = await latest()
-
-      if (schema) {
-        hasPrivateTypes = hasIntersectedTypes(
-          schema,
-          queryDocumentNode,
-          privateTypes,
-        )
-      }
-    }
-
-    content = normalizeDocument(originalBody.query)
     isMutationRequest = isMutation(queryDocumentNode)
+
+    if (!isMutationRequest) {
+      if (authDirectiveName || privateTypes) {
+        const schemaString = await latest()
+
+        if (schemaString) {
+          const schema = buildSchema(schemaString, {
+            noLocation: true,
+            assumeValid: true,
+            assumeValidSDL: true,
+          })
+          if (authDirectiveName) {
+            authRequired = requiresAuth(
+              authDirectiveName,
+              schema,
+              queryDocumentNode,
+            )
+          }
+          if (privateTypes) {
+            hasPrivateTypes = hasIntersectedTypes(
+              schema,
+              queryDocumentNode,
+              privateTypes,
+            )
+          }
+        }
+      }
+
+      content = normalizeDocument(originalBody.query)
+    }
   } catch (error) {
     return res.send(400, error, {
       ...defaultResponseHeaders,
@@ -97,7 +117,7 @@ export const graphql: Handler = async function (req, res) {
   const authHeader = req.headers.get(Headers.authorization) || ''
   const isPrivateAndCacheable =
     isMutationRequest === false &&
-    (hasPrivateTypes || scope === Scope.AUTHENTICATED)
+    (hasPrivateTypes || scope === Scope.AUTHENTICATED || authRequired)
 
   /**
    *  In case of the query will return user specific data the response
@@ -129,8 +149,8 @@ export const graphql: Handler = async function (req, res) {
       }
 
       return res.send(200, value.body, {
-        ...value.headers,
         ...defaultResponseHeaders,
+        ...value.headers,
         ...headers,
       })
     }

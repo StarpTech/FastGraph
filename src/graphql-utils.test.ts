@@ -5,6 +5,7 @@ import {
   fetchAndStoreSchema,
   hasIntersectedTypes,
   introspectionQuery,
+  requiresAuth,
 } from './graphql-utils'
 import { createKVNamespaces, getKVEntries, mockFetch } from './test-utils'
 import { readFileSync } from 'fs'
@@ -24,15 +25,26 @@ test('extractTypes', async (t) => {
   t.deepEqual([...ids], ['Droid'])
 })
 
+test('requiresAuth', async (t) => {
+  let requires = requiresAuth(
+    'auth',
+    buildSchema(testSchema),
+    parse(droidWithArg),
+  )
+  t.true(requires)
+  requires = requiresAuth('auth', buildSchema(testSchema), parse(simpleHero))
+  t.false(requires)
+})
+
 test('hasIntersectedTypes - matching', async (t) => {
   const document = parse(droidWithArg)
-  let match = hasIntersectedTypes(testSchema, document, ['Droid'])
+  let match = hasIntersectedTypes(buildSchema(testSchema), document, ['Droid'])
   t.true(match)
 })
 
 test('hasIntersectedTypes - not matching', async (t) => {
   const document = parse(simpleHero)
-  let match = hasIntersectedTypes(testSchema, document, ['String'])
+  let match = hasIntersectedTypes(buildSchema(testSchema), document, ['String'])
   t.false(match)
 })
 
@@ -55,6 +67,6 @@ test('fetchAndStoreSchema', async (t) => {
   const kvEntries = getKVEntries(KV, false)
   t.deepEqual(kvEntries, {
     'graphql-schema::latest':
-      'union SearchResult=Human|Droid|Starship type Query{hero:Character droid(id:ID!):Droid search(name:String!):SearchResult}type Mutation{createReview(episode:Episode!review:ReviewInput!):Review}type Subscription{remainingJedis:Int!}input ReviewInput{stars:Int!commentary:String}type Review{id:ID!stars:Int!commentary:String}enum Episode{NEWHOPE EMPIRE JEDI}interface Character{name:String!friends:[Character]}type Human implements Character{name:String!height:String!friends:[Character]}type Droid implements Character{name:String!primaryFunction:String!friends:[Character]}type Starship{name:String!length:Float!}',
+      'directive@auth on OBJECT|FIELD_DEFINITION union SearchResult=Human|Droid|Starship type Query{hero:Character droid(id:ID!):Droid search(name:String!):SearchResult}type Mutation{createReview(episode:Episode!review:ReviewInput!):Review}type Subscription{remainingJedis:Int!}input ReviewInput{stars:Int!commentary:String}type Review{id:ID!stars:Int!commentary:String}enum Episode{NEWHOPE EMPIRE JEDI}interface Character{name:String!friends:[Character]}type Human implements Character{name:String!height:String!friends:[Character]}type Droid implements Character{name:String!primaryFunction:String!friends:[Character]}type Starship{name:String!length:Float!}',
   })
 })
