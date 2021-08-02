@@ -26,8 +26,8 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 We provide different features to work with authenticated data:
 
 1. `SCOPE=AUTHENTICATED` This will enforce to cache all requests in relation to the _Authorization_ header.
-2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` GraphQL directive that identify the request from scope `AUTHENTICATED`.
-3. `PRIVATE_TYPES=User,Profile` The request is validated for the presence of specific GraphQL types that identify the request from scope `AUTHENTICATED`.
+2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` GraphQL directive. When matched the request is handled as scope `AUTHENTICATED`.
+3. `PRIVATE_TYPES=User,Profile` The request is validated for the presence of specific GraphQL types. When matched the request is handled as scope `AUTHENTICATED`.
 
 In order to use option `2` and `3` you have to put your schema in `schema.graphql`. The schema is build and injected at build-time into the worker script. This is the only solution to provide constant good latency. The schema size is limited to approximately `1MB` after normalization and compression. The worker script size is itself limited to `1MB` from cloudflare.
 
