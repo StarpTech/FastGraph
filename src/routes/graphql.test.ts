@@ -1,6 +1,5 @@
 import test from 'ava'
 import { readFileSync } from 'fs'
-import { latestKey } from '../stores/Schema'
 import {
   createKVNamespaces,
   getKVEntries,
@@ -27,7 +26,7 @@ test.serial(
   async (t) => {
     const KV = new Map()
     const KV_METADATA = new Map()
-    createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
+    createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,
@@ -124,12 +123,9 @@ test.serial(
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
     })
-    const { store: schemaStore } = NewKVNamespace({
-      name: 'GRAPHQL_SCHEMA',
-    })
-    schemaStore.set(latestKey, testSchema)
 
     let req = WorktopRequest('POST', {
+      schema: testSchema,
       query: droidWithArg,
     })
     let res = WorktopResponse()
@@ -229,7 +225,7 @@ test.serial(
 test.serial('Should not cache mutations and proxy them through', async (t) => {
   const KV = new Map()
   const KV_METADATA = new Map()
-  createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
+  createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
 
   let req = WorktopRequest('POST', {
     query: createReview,
@@ -278,10 +274,10 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   })
 })
 
-test.serial('Should respect max-age directive from origin', async (t) => {
+test.only('Should respect max-age directive from origin', async (t) => {
   const KV = new Map()
   const KV_METADATA = new Map()
-  createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
+  createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
 
   let req = WorktopRequest('POST', {
     query: droidWithArg,
@@ -360,7 +356,7 @@ test.serial(
   async (t) => {
     const KV = new Map()
     const KV_METADATA = new Map()
-    createKVNamespaces(['QUERY_CACHE', 'GRAPHQL_SCHEMA'], KV, KV_METADATA)
+    createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,

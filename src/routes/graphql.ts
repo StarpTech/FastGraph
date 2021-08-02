@@ -1,11 +1,13 @@
 import type { Handler } from 'worktop'
 import { SHA256 } from 'worktop/crypto'
 import retry from 'async-retry'
+import LZUTF8 from 'lzutf8'
 import {
   normalizeDocument,
   isMutation,
   hasIntersectedTypes,
   requiresAuth,
+  buildGraphQLSchema,
 } from '../graphql-utils'
 import {
   Headers,
@@ -15,9 +17,8 @@ import {
   Scope,
 } from '../utils'
 import { find, save } from '../stores/QueryCache'
-import { latest } from '../stores/Schema'
-import { buildSchema, parse } from 'graphql'
 import { HTTPResponseError } from '../errors'
+import { GraphQLSchema, parse } from 'graphql'
 
 declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
@@ -35,10 +36,19 @@ const scope: Scope = SCOPE as Scope
 const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
 const authDirectiveName = AUTH_DIRECTIVE
 
+// webpack
+declare const SCHEMA_STRING: string
+let schemaString = LZUTF8.decompress(SCHEMA_STRING, {
+  inputEncoding: 'StorageBinaryString',
+})
+let schema: GraphQLSchema
+
 type GraphQLRequest = {
   query: string
   operationName?: string
   variables?: Record<string, any>
+  // only for testing
+  schema?: string
 }
 
 export const graphql: Handler = async function (req, res) {
@@ -73,20 +83,20 @@ export const graphql: Handler = async function (req, res) {
   let authRequired = false
   let content = originalBody.query
 
+  // only for testing
+  if (process.env.NODE_ENV === 'test' && originalBody.schema) {
+    schema = buildGraphQLSchema(originalBody.schema)
+  } else if (!schema && schemaString) {
+    schema = buildGraphQLSchema(schemaString)
+  }
+
   try {
     queryDocumentNode = parse(originalBody.query, { noLocation: true })
     isMutationRequest = isMutation(queryDocumentNode)
 
     if (!isMutationRequest) {
       if (authDirectiveName || privateTypes) {
-        const schemaString = await latest()
-
-        if (schemaString) {
-          const schema = buildSchema(schemaString, {
-            noLocation: true,
-            assumeValid: true,
-            assumeValidSDL: true,
-          })
+        if (schema) {
           if (authDirectiveName) {
             authRequired = requiresAuth(
               authDirectiveName,

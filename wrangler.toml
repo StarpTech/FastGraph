@@ -8,18 +8,17 @@ zone_id = ""
 target_type = "javascript"
 usage_model= "unbound"
 kv_namespaces = [ 
-         { binding = "QUERY_CACHE", id = "4b5096c559034695be4d83fa91540c2c", preview_id = "4b5096c559034695be4d83fa91540c2c" },
-         { binding = "GRAPHQL_SCHEMA", id = "deb5af2721a148f7a25d04c49ac36eb3", preview_id = "deb5af2721a148f7a25d04c49ac36eb3" }
+         { binding = "QUERY_CACHE", id = "4b5096c559034695be4d83fa91540c2c", preview_id = "4b5096c559034695be4d83fa91540c2c" }
 ]
 
 [vars]
 ORIGIN_URL = "https://gitlab.com/api/graphql"
 INTROSPECTION_URL = "https://gitlab.com/api/graphql"
 SCOPE = "PUBLIC"
-IGNORE_ORIGIN_CACHE_HEADERS = "0"
+IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 PRIVATE_TYPES = ""
-AUTH_DIRECTIVE = ""
+AUTH_DIRECTIVE = "auth"
 INJECT_ORIGIN_HEADERS = ""
 
 [dev]
@@ -31,6 +30,3 @@ upstream_protocol="https"
 [build]
 upload.format = "service-worker"
 command = "npm run build"
-
-[triggers]
-crons = ["*/30 * * * *"]

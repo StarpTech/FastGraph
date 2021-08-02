@@ -13,7 +13,7 @@
 - Cache POST GraphQL queries
 - Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
 - Set appropriate cache headers `age`, `x-cache`, `cache-control`
-- Cache authenticated data when specific GraphQL types are used
+- Cache authenticated data when specific GraphQL directive or types are used
 - Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
 - All benefits of [Cloudflare Workers](https://workers.cloudflare.com/) and [Cloudflare KV](https://www.cloudflare.com/products/workers-kv/)
 
@@ -26,20 +26,12 @@ All GraphQL queries are cached by default with a TTL of 900 seconds (15min). You
 We provide different features to work with authenticated data:
 
 1. `SCOPE=AUTHENTICATED` This will enforce to cache all requests in relation to the _Authorization_ header.
-2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` directive that handles the request as scope `AUTHENTICATED`.
-3. `PRIVATE_TYPES=User,Profile` A more powerful feature is to mark specific GraphQL types as private. In this way a GraphQL query that contains private types is handled as scope `AUTHENTICATED` In order to use this feature, you have to provide your latest GraphQL schema to GraphCDN. We support two options:
+2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` GraphQL directive that identify the request from scope `AUTHENTICATED`.
+3. `PRIVATE_TYPES=User,Profile` The request is validated for the presence of specific GraphQL types that identify the request from scope `AUTHENTICATED`.
 
-1. Push the schema manually to cloudflare.
+In order to use option `2` and `3` you have to put your schema in `schema.graphql`. The schema is build and injected at build-time into the worker script. This is the only solution to provide constant good latency. The schema size is limited to approximately `1MB` after normalization and compression. The worker script size is itself limited to `1MB` from cloudflare.
 
-```sh
-wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA_STRING
-```
-
-2. Set the `INTROSPECTION_URL` variable and the schema is synchronized every minute. The endpoint must be publicly available.
-
-By default when no schema was provided or no type was matched the request is always cached as long as your origin doesn't respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
-
-**Please have in mind that `PRIVATE_TYPES`, `AUTH_DIRECTIVE` can have a significant performance drop when you push a big GraphQL schema**
+**Don't forget to validate your schema before the build.**
 
 ## Getting Started
 
@@ -65,7 +57,6 @@ Set the variables in your `wrangler.toml`.
 - **INJECT_ORIGIN_HEADERS**: Should the origin headers be injected in the response? (_Default:_ `""` _Options:_ `"","1"`)
 - **SCOPE**: The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
 - **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be ignored? (_Default:_ `""`, _Options:_ `"","1"`)
-- **INTROSPECTION_URL**: The url of your introspection endpoint. If you enable it a [cron-triggers](https://developers.cloudflare.com/workers/platform/cron-triggers) will fetch for the latest schema every 30 minutes. (_Default:_ `""`)
 
 ## Example
 

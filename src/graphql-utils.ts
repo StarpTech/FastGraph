@@ -7,12 +7,11 @@ import {
   GraphQLSchema,
   buildClientSchema,
   validateSchema,
-  printSchema,
   isScalarType,
   getNamedType,
   BREAK,
+  buildSchema,
 } from 'graphql'
-import { save } from './stores/Schema'
 import { Headers as HTTPHeaders } from './utils'
 
 export function normalizeDocument(document: string): string {
@@ -89,6 +88,14 @@ export function requiresAuth(
   return hasAuthDirective
 }
 
+export const buildGraphQLSchema = (schema: string) => {
+  return buildSchema(schema, {
+    noLocation: true,
+    assumeValid: true,
+    assumeValidSDL: true,
+  })
+}
+
 export async function getClientSchema(
   introspectionUrl: string,
   headers: Headers,
@@ -113,18 +120,6 @@ export async function getClientSchema(
   }
 
   return null
-}
-
-export async function fetchAndStoreSchema(
-  introspectionUrl: string,
-  headers: Headers,
-) {
-  const schema = await getClientSchema(introspectionUrl, headers)
-  if (schema) {
-    await save(normalizeDocument(printSchema(schema)))
-  } else {
-    throw new Error('Schema could not updated from introspection endpoint')
-  }
 }
 
 // https://github.com/graphql/graphql-js/blob/dd0297302800347a20a192624ba6373ee86836a3/src/utilities/introspectionQuery.js#L14

@@ -1,11 +1,8 @@
 import { Router, STATUS_CODES } from 'worktop'
 import { listen } from 'worktop/cache'
 import * as CORS from 'worktop/cors'
-import { fetchAndStoreSchema } from './graphql-utils'
 import { graphql } from './routes/graphql'
 import { Headers as HTTPHeaders } from './utils'
-
-declare const INTROSPECTION_URL: string
 
 const API = new Router()
 
@@ -20,7 +17,6 @@ API.onerror = (_req, _res, status, error) => {
   const body = {
     error: (error && error.message) || statusText || String(status),
   }
-
   return new Response(JSON.stringify(body), {
     status,
     statusText,
@@ -31,11 +27,5 @@ API.onerror = (_req, _res, status, error) => {
 }
 
 API.add('POST', '/', graphql)
-
-addEventListener('scheduled', (event) => {
-  if (INTROSPECTION_URL) {
-    event.waitUntil(fetchAndStoreSchema(INTROSPECTION_URL, new Headers()))
-  }
-})
 
 listen(API.run)
