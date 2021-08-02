@@ -117,6 +117,7 @@ export const WorktopRequest = (
     method,
     query,
     headers,
+    extend (p: Promise<any>) {},
     body: {
       json() {
         return Promise.resolve(payload)

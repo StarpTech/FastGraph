@@ -264,18 +264,18 @@ export const graphql: Handler = async function (req, res) {
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       }
 
-      const result = await save(
-        querySignature,
-        {
-          headers,
-          body: originResult,
-        },
-        maxAge,
+      // Alias for `event.waitUntil`
+      // ~> queues background task (does NOT delay response)
+      req.extend(
+        save(
+          querySignature,
+          {
+            headers,
+            body: originResult,
+          },
+          maxAge,
+        ),
       )
-
-      if (!result) {
-        console.error('query could not be stored in cache')
-      }
 
       return res.send(200, originResult, headers)
     }

@@ -51,9 +51,17 @@ export const apq: Handler = async function (req, res) {
       ) {
         return res.send(400, 'provided sha does not match query')
       }
-      await save(persistedQuery.sha256Hash, {
-        query,
-      }, defaultAPQTTL)
+      // Alias for `event.waitUntil`
+      // ~> queues background task (does NOT delay response)
+      req.extend(
+        save(
+          persistedQuery.sha256Hash,
+          {
+            query,
+          },
+          defaultAPQTTL,
+        ),
+      )
     } else {
       return res.send(200, {
         data: {
@@ -94,7 +102,9 @@ export const apq: Handler = async function (req, res) {
     [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
     [HTTPHeaders.gcdnOriginStatusCode]: originResponse.status.toString(),
     [HTTPHeaders.gcdnOriginStatusText]: originResponse.statusText.toString(),
-    [HTTPHeaders.gcdnCache]: isCacheable(originResponse) ? CacheHitHeader.HIT : CacheHitHeader.MISS,
+    [HTTPHeaders.gcdnCache]: isCacheable(originResponse)
+      ? CacheHitHeader.HIT
+      : CacheHitHeader.MISS,
   }
 
   return res.send(200, await originResponse.json(), headers)

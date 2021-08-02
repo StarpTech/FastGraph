@@ -13,7 +13,7 @@ kv_namespaces = [
 ]
 
 [vars]
-ORIGIN_URL = "https://countries.trevorblades.com/"
+ORIGIN_URL = "https://gitlab.com/api/graphql"
 SCOPE = "PUBLIC"
 IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
