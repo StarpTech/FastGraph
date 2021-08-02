@@ -23,6 +23,10 @@ globalThis.SWR = '900'
 // @ts-ignore
 globalThis.APQ_TTL = '900'
 
+// @ts-ignore
+// worktop/cache
+globalThis.caches = { default: {} };
+
 globalThis.crypto = {
   // @ts-ignore
   getRandomValues(arr: Uint8Array) {
