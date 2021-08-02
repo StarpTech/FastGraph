@@ -27,9 +27,11 @@ declare const INJECT_ORIGIN_HEADERS: string
 declare const SCOPE: string
 declare const IGNORE_ORIGIN_CACHE_HEADERS: string
 declare const AUTH_DIRECTIVE: string
+declare const SWR: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
+const swr = parseInt(SWR)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
 const injectOriginHeaders = !!INJECT_ORIGIN_HEADERS
 const scope: Scope = SCOPE as Scope
@@ -248,7 +250,7 @@ export const graphql: Handler = async function (req, res) {
         [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
         [HTTPHeaders.xCache]: CacheHitHeader.PASS,
         [HTTPHeaders.gcdnScope]: Scope.PUBLIC,
-        [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
+        [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
         ...(injectOriginHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }

@@ -18,6 +18,8 @@ globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
 globalThis.AUTH_DIRECTIVE = ''
 // @ts-ignore
 globalThis.SCHEMA_STRING = ''
+// @ts-ignore
+globalThis.SWR = '900'
 
 globalThis.crypto = {
   // @ts-ignore
@@ -102,10 +104,12 @@ export const WorktopResponse = () => {
 export const WorktopRequest = (
   method = 'POST',
   payload: object | null = null,
+  query: URLSearchParams = new URLSearchParams(),
   headers: Headers = Headers(null),
 ): ServerRequest => {
   return {
     method,
+    query,
     headers,
     body: {
       json() {

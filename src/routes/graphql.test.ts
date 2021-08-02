@@ -309,7 +309,7 @@ test.only('Should respect max-age directive from origin', async (t) => {
 
   t.is(
     headers['cache-control'],
-    'public, max-age=65, stale-if-error=60, stale-while-revalidate=65',
+    'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
   )
 
   t.like(kvEntries, {
@@ -318,7 +318,7 @@ test.only('Should respect max-age directive from origin', async (t) => {
         body: originResponseJson,
         headers: {
           [Headers.cacheControl]:
-            'public, max-age=65, stale-if-error=60, stale-while-revalidate=65',
+            'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
           [Headers.gcdnCache]: CacheHitHeader.MISS,
           [Headers.xCache]: CacheHitHeader.MISS,
         },
@@ -343,7 +343,7 @@ test.only('Should respect max-age directive from origin', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=65, stale-if-error=60, stale-while-revalidate=65',
+      'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
     [Headers.age]: '0',
     [Headers.gcdnCache]: CacheHitHeader.HIT,
     [Headers.xCache]: CacheHitHeader.HIT,

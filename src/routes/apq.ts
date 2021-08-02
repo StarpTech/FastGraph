@@ -9,6 +9,9 @@ const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 declare const ORIGIN_URL: string
 const originUrl = ORIGIN_URL
 
+declare const SWR: string
+const swr = parseInt(SWR)
+
 type APQExtensions = {
   persistedQuery: {
     version: number
@@ -78,7 +81,10 @@ export const apq: Handler = async function (req, res) {
   }
 
   const headers: Record<string, string> = {
-    [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
+    [HTTPHeaders.contentType]: 'application/json',
+    [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
+    [HTTPHeaders.gcdnOriginStatusCode]: originResponse.status.toString(),
+    [HTTPHeaders.gcdnOriginStatusText]: originResponse.statusText.toString(),
   }
 
   return res.send(200, await originResponse.json(), headers)
