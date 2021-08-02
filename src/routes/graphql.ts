@@ -23,7 +23,6 @@ import { GraphQLSchema, parse } from 'graphql'
 declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
 declare const PRIVATE_TYPES: string
-declare const INJECT_ORIGIN_HEADERS: string
 declare const SCOPE: string
 declare const IGNORE_ORIGIN_CACHE_HEADERS: string
 declare const AUTH_DIRECTIVE: string
@@ -33,7 +32,6 @@ const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
-const injectOriginHeaders = !!INJECT_ORIGIN_HEADERS
 const scope: Scope = SCOPE as Scope
 const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
 const authDirectiveName = AUTH_DIRECTIVE
@@ -251,7 +249,6 @@ export const graphql: Handler = async function (req, res) {
         [HTTPHeaders.xCache]: CacheHitHeader.PASS,
         [HTTPHeaders.gcdnScope]: Scope.PUBLIC,
         [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
-        ...(injectOriginHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }
 
@@ -282,7 +279,6 @@ export const graphql: Handler = async function (req, res) {
 
     // First call or mutation requests
     return res.send(200, originResult, {
-      ...(injectOriginHeaders ? originHeaders : undefined),
       ...defaultResponseHeaders,
       [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
     })

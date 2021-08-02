@@ -9,8 +9,6 @@ globalThis.DEFAULT_TTL = '900'
 // @ts-ignore
 globalThis.PRIVATE_TYPES = ''
 // @ts-ignore
-globalThis.INJECT_ORIGIN_HEADERS = ''
-// @ts-ignore
 globalThis.SCOPE = ''
 // @ts-ignore
 globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
@@ -25,7 +23,7 @@ globalThis.APQ_TTL = '900'
 
 // @ts-ignore
 // worktop/cache
-globalThis.caches = { default: {} };
+globalThis.caches = { default: {} }
 
 globalThis.crypto = {
   // @ts-ignore
@@ -117,7 +115,7 @@ export const WorktopRequest = (
     method,
     query,
     headers,
-    extend (p: Promise<any>) {},
+    extend(p: Promise<any>) {},
     body: {
       json() {
         return Promise.resolve(payload)
