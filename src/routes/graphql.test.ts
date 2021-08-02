@@ -1,7 +1,6 @@
 import test from 'ava'
 import { readFileSync } from 'fs'
 import {
-  createKVNamespaces,
   getKVEntries,
   mockFetch,
   NewKVNamespace,
@@ -24,9 +23,9 @@ const createReview = readFileSync(
 test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
-    const KV = new Map()
-    const KV_METADATA = new Map()
-    createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
+    const { store: queryStore, metadata } = NewKVNamespace({
+      name: 'QUERY_CACHE',
+    })
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,
@@ -53,8 +52,8 @@ test.serial(
     t.deepEqual(res.body, originResponse)
 
     let headers = Object.fromEntries(res.headers)
-    const kvEntries = getKVEntries(KV)
-    const metadataEntries = Object.fromEntries(KV_METADATA)
+    const kvEntries = getKVEntries(queryStore)
+    const metadataEntries = Object.fromEntries(metadata)
 
     const graphCDNHeaders = {
       [Headers.cacheControl]:
@@ -223,9 +222,9 @@ test.serial(
 )
 
 test.serial('Should not cache mutations and proxy them through', async (t) => {
-  const KV = new Map()
-  const KV_METADATA = new Map()
-  createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
+  const { store: queryStore, metadata } = NewKVNamespace({
+    name: 'QUERY_CACHE',
+  })
 
   let req = WorktopRequest('POST', {
     query: createReview,
@@ -252,8 +251,8 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.deepEqual(res.body, originResponse)
 
   let headers = Object.fromEntries(res.headers)
-  const kvEntries = getKVEntries(KV)
-  const metadataEntries = Object.fromEntries(KV_METADATA)
+  const kvEntries = getKVEntries(queryStore)
+  const metadataEntries = Object.fromEntries(metadata)
 
   t.like(headers, {
     [Headers.gcdnCache]: CacheHitHeader.PASS,
@@ -275,9 +274,9 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
 })
 
 test.only('Should respect max-age directive from origin', async (t) => {
-  const KV = new Map()
-  const KV_METADATA = new Map()
-  createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
+  const { store: queryStore, metadata } = NewKVNamespace({
+    name: 'QUERY_CACHE',
+  })
 
   let req = WorktopRequest('POST', {
     query: droidWithArg,
@@ -305,8 +304,8 @@ test.only('Should respect max-age directive from origin', async (t) => {
   t.deepEqual(res.body, originResponse)
 
   let headers = Object.fromEntries(res.headers)
-  const kvEntries = getKVEntries(KV)
-  const metadataEntries = Object.fromEntries(KV_METADATA)
+  const kvEntries = getKVEntries(queryStore)
+  const metadataEntries = Object.fromEntries(metadata)
 
   t.is(
     headers['cache-control'],
@@ -354,9 +353,9 @@ test.only('Should respect max-age directive from origin', async (t) => {
 test.serial(
   'Should fail when origin does not respond with proper json content-type',
   async (t) => {
-    const KV = new Map()
-    const KV_METADATA = new Map()
-    createKVNamespaces(['QUERY_CACHE'], KV, KV_METADATA)
+    NewKVNamespace({
+      name: 'QUERY_CACHE',
+    })
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,

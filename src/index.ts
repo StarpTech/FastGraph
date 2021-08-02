@@ -1,6 +1,7 @@
 import { Router, STATUS_CODES } from 'worktop'
 import { listen } from 'worktop/cache'
 import * as CORS from 'worktop/cors'
+import { apq } from './routes/apq'
 import { graphql } from './routes/graphql'
 import { Headers as HTTPHeaders } from './utils'
 
@@ -27,5 +28,6 @@ API.onerror = (_req, _res, status, error) => {
 }
 
 API.add('POST', '/', graphql)
+API.add('GET', '/', apq)
 
 listen(API.run)

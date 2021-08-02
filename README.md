@@ -15,6 +15,7 @@
 - Set appropriate cache headers `age`, `x-cache`, `cache-control`
 - Cache authenticated data when specific GraphQL directive or types are used
 - Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
+- Transparent [APQ](https://www.apollographql.com/docs/apollo-server/performance/apq/) proxy and cache.
 - All benefits of [Cloudflare Workers](https://workers.cloudflare.com/) and [Cloudflare KV](https://www.cloudflare.com/products/workers-kv/)
 
 ## Caching semantics

@@ -87,6 +87,7 @@ export const graphql: Handler = async function (req, res) {
   if (process.env.NODE_ENV === 'test' && originalBody.schema) {
     schema = buildGraphQLSchema(originalBody.schema)
   } else if (!schema && schemaString) {
+    console.log('Rebuild graphql schema')
     schema = buildGraphQLSchema(schemaString)
   }
 
