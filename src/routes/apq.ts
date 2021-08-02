@@ -1,7 +1,7 @@
 import type { Handler } from 'worktop'
 import { SHA256, timingSafeEqual } from 'worktop/crypto'
 import { find, save } from '../stores/APQCache'
-import { Headers as HTTPHeaders } from '../utils'
+import { Headers as HTTPHeaders, parseMaxAge } from '../utils'
 
 declare const DEFAULT_TTL: string
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
@@ -61,7 +61,7 @@ export const apq: Handler = async function (req, res) {
     }
   }
 
-  const resp = await fetch(originUrl, {
+  const originResponse = await fetch(originUrl, {
     body: JSON.stringify({
       query,
     }),
@@ -69,9 +69,17 @@ export const apq: Handler = async function (req, res) {
     method: 'POST',
   })
 
-  const headers: Record<string, string> = {
-    [HTTPHeaders.cacheControl]: `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=60, stale-while-revalidate=${defaultMaxAgeInSeconds}`,
+  let maxAge = defaultMaxAgeInSeconds
+  const maxAgeHeaderValue = originResponse.headers.get(HTTPHeaders.cacheControl)
+
+  if (maxAgeHeaderValue) {
+    const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
+    maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
   }
 
-  return res.send(200, await resp.json(), headers)
+  const headers: Record<string, string> = {
+    [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
+  }
+
+  return res.send(200, await originResponse.json(), headers)
 }
