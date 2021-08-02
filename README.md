@@ -51,6 +51,7 @@ Set the variables in your `wrangler.toml`.
 
 - **ORIGIN_URL**: The url of your production backend you want your service to proxy to.
 - **DEFAULT_TTL**: The default TTL (minimum 60s) of cacheable responses (_Default:_ `900`)
+- **APQ_TTL**: The default TTL (minimum 60s) of AQP queries (_Default:_ `900`)
 - **SWR**: The default value for the `stale-while-revalidate` cache directive (_Default:_ `900`)
 - **PRIVATE_TYPES**: The GraphQL types that indicates a private response (_Default:_ `""`, _Example:_ `"User,Profile"`)
 - **AUTH_DIRECTIVE**: The GraphQL directive on object or field definition that marks the request as private (_Default:_ `""`)

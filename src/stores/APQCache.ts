@@ -22,10 +22,14 @@ export function remove(pqKey: string) {
   return DB.remove(APQ_CACHE, key)
 }
 
-export function save(uid: string, result: APQResult) {
+export function save(uid: string, result: APQResult, expirationTtl: number) {
   const key = key_item(uid)
 
+  // ttl must be at least 60s (cf requirement)
+  expirationTtl = expirationTtl < 60 ? 60 : expirationTtl
+
   return DB.write(APQ_CACHE, key, result, {
+    expirationTtl,
     toJSON: true,
   })
 }

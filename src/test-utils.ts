@@ -20,6 +20,8 @@ globalThis.AUTH_DIRECTIVE = ''
 globalThis.SCHEMA_STRING = ''
 // @ts-ignore
 globalThis.SWR = '900'
+// @ts-ignore
+globalThis.APQ_TTL = '900'
 
 globalThis.crypto = {
   // @ts-ignore

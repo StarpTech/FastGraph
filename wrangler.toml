@@ -22,6 +22,7 @@ SWR = "900"
 PRIVATE_TYPES = ""
 AUTH_DIRECTIVE = "auth"
 INJECT_ORIGIN_HEADERS = ""
+APQ_TTL = "900"
 
 [dev]
 ip = "0.0.0.0"

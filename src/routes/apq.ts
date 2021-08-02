@@ -6,6 +6,9 @@ import { Headers as HTTPHeaders, parseMaxAge } from '../utils'
 declare const DEFAULT_TTL: string
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 
+declare const APQ_TTL: string
+const defaultAPQTTL = parseInt(APQ_TTL)
+
 declare const ORIGIN_URL: string
 const originUrl = ORIGIN_URL
 
@@ -48,7 +51,7 @@ export const apq: Handler = async function (req, res) {
       }
       await save(persistedQuery.sha256Hash, {
         query,
-      })
+      }, defaultAPQTTL)
     } else {
       return res.send(200, {
         data: {
