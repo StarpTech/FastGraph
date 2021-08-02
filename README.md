@@ -39,6 +39,8 @@ wrangler kv:key put --binding=GRAPHQL_SCHEMA graphql-schema::latest $YOUR_SCHEMA
 
 By default when no schema was provided or no type was matched the request is always cached as long as your origin doesn't respond with the appropriate `private`, `no-cache` or `no-store` cache-control directive.
 
+**Please have in mind that `PRIVATE_TYPES`, `AUTH_DIRECTIVE` can have a significant performance drop when you push a big GraphQL schema**
+
 ## Getting Started
 
 ```sh
