@@ -1,5 +1,5 @@
 import type { Handler } from 'worktop'
-import { SHA256 } from 'worktop/crypto'
+import { SHA256, timingSafeEqual } from 'worktop/crypto'
 import { find, save } from '../stores/APQCache'
 import { Headers as HTTPHeaders } from '../utils'
 
@@ -35,7 +35,12 @@ export const apq: Handler = async function (req, res) {
 
   if (!result) {
     if (query) {
-      if ((await SHA256(query)) !== persistedQuery.sha256Hash) {
+      if (
+        timingSafeEqual(
+          Buffer.from(await SHA256(query)),
+          Buffer.from(persistedQuery.sha256Hash),
+        )
+      ) {
         return res.send(400, 'provided sha does not match query')
       }
       await save(persistedQuery.sha256Hash, {
