@@ -10,7 +10,7 @@ import {
   buildGraphQLSchema,
 } from '../graphql-utils'
 import {
-  Headers,
+  Headers as HTTPHeaders,
   CacheHitHeader,
   isResponseCachable,
   parseMaxAge,
@@ -61,19 +61,19 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const defaultResponseHeaders: Record<string, string> = {
-    [Headers.contentType]: 'application/json',
-    [Headers.date]: new Date(Date.now()).toUTCString(),
-    [Headers.xCache]: CacheHitHeader.MISS,
-    [Headers.gcdnCache]: CacheHitHeader.MISS,
-    [Headers.gcdnOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
+    [HTTPHeaders.contentType]: 'application/json',
+    [HTTPHeaders.date]: new Date(Date.now()).toUTCString(),
+    [HTTPHeaders.xCache]: CacheHitHeader.MISS,
+    [HTTPHeaders.gcdnCache]: CacheHitHeader.MISS,
+    [HTTPHeaders.gcdnOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
       ? 'true'
       : 'false',
-    [Headers.xFrameOptions]: 'deny',
-    [Headers.xRobotsTag]: 'noindex',
-    [Headers.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
+    [HTTPHeaders.xFrameOptions]: 'deny',
+    [HTTPHeaders.xRobotsTag]: 'noindex',
+    [HTTPHeaders.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
 
-    [Headers.contentSecurityPolicy]: `default-src 'none'`,
-    [Headers.strictTransportSecurity]:
+    [HTTPHeaders.contentSecurityPolicy]: `default-src 'none'`,
+    [HTTPHeaders.strictTransportSecurity]:
       'max-age=31536000; includeSubdomains; preload',
   }
 
@@ -119,12 +119,12 @@ export const graphql: Handler = async function (req, res) {
   } catch (error) {
     return res.send(400, error, {
       ...defaultResponseHeaders,
-      [Headers.gcdnCache]: CacheHitHeader.ERROR,
-      [Headers.xCache]: CacheHitHeader.HIT,
+      [HTTPHeaders.gcdnCache]: CacheHitHeader.ERROR,
+      [HTTPHeaders.xCache]: CacheHitHeader.HIT,
     })
   }
 
-  const authHeader = req.headers.get(Headers.authorization) || ''
+  const authHeader = req.headers.get(HTTPHeaders.authorization) || ''
   const isPrivateAndCacheable =
     isMutationRequest === false &&
     (hasPrivateTypes || scope === Scope.AUTHENTICATED || authRequired)
@@ -148,12 +148,12 @@ export const graphql: Handler = async function (req, res) {
 
     if (value) {
       const headers: Record<string, string> = {
-        [Headers.gcdnCache]: CacheHitHeader.HIT,
-        [Headers.xCache]: CacheHitHeader.HIT,
+        [HTTPHeaders.gcdnCache]: CacheHitHeader.HIT,
+        [HTTPHeaders.xCache]: CacheHitHeader.HIT,
       }
       if (metadata) {
         const age = Math.round((Date.now() - metadata.createdAt) / 1000)
-        headers[Headers.age] = (
+        headers[HTTPHeaders.age] = (
           age > metadata.expirationTtl ? metadata.expirationTtl : age
         ).toString()
       }
@@ -196,9 +196,9 @@ export const graphql: Handler = async function (req, res) {
     )
   } catch (error) {
     if (error instanceof HTTPResponseError) {
-      defaultResponseHeaders[Headers.gcdnOriginStatusCode] =
+      defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusCode] =
         error.response.status.toString()
-      defaultResponseHeaders[Headers.gcdnOriginStatusText] =
+      defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusText] =
         error.response.statusText.toString()
       return res.send(
         500,
@@ -214,9 +214,9 @@ export const graphql: Handler = async function (req, res) {
     throw error
   }
 
-  defaultResponseHeaders[Headers.gcdnOriginStatusCode] =
+  defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusCode] =
     originResponse.status.toString()
-  defaultResponseHeaders[Headers.gcdnOriginStatusText] =
+  defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusText] =
     originResponse.statusText.toString()
 
   const isOriginResponseCacheable =
@@ -225,7 +225,7 @@ export const graphql: Handler = async function (req, res) {
     (isMutationRequest === false && isOriginResponseCacheable) ||
     (isOriginResponseCacheable && isPrivateAndCacheable)
 
-  const contentType = originResponse.headers.get(Headers.contentType)
+  const contentType = originResponse.headers.get(HTTPHeaders.contentType)
   const originHeaders = Object.fromEntries(originResponse.headers)
 
   if (contentType?.includes('application/json')) {
@@ -233,7 +233,9 @@ export const graphql: Handler = async function (req, res) {
 
     if (isCacheable) {
       let maxAge = defaultMaxAgeInSeconds
-      const maxAgeHeaderValue = originResponse.headers.get(Headers.cacheControl)
+      const maxAgeHeaderValue = originResponse.headers.get(
+        HTTPHeaders.cacheControl,
+      )
       if (ignoreOriginCacheHeaders === false) {
         if (maxAgeHeaderValue) {
           const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
@@ -242,20 +244,20 @@ export const graphql: Handler = async function (req, res) {
       }
 
       const headers: Record<string, string> = {
-        [Headers.gcdnCache]: CacheHitHeader.PASS,
-        [Headers.xCache]: CacheHitHeader.PASS,
-        [Headers.gcdnScope]: Scope.PUBLIC,
-        [Headers.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
+        [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
+        [HTTPHeaders.xCache]: CacheHitHeader.PASS,
+        [HTTPHeaders.gcdnScope]: Scope.PUBLIC,
+        [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`,
         ...(injectOriginHeaders ? originHeaders : undefined),
         ...defaultResponseHeaders,
       }
 
       if (isPrivateAndCacheable) {
-        headers[Headers.gcdnScope] = Scope.AUTHENTICATED
+        headers[HTTPHeaders.gcdnScope] = Scope.AUTHENTICATED
         headers[
-          Headers.cacheControl
+          HTTPHeaders.cacheControl
         ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
-        headers[Headers.vary] =
+        headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       }
 
@@ -279,7 +281,7 @@ export const graphql: Handler = async function (req, res) {
     return res.send(200, originResult, {
       ...(injectOriginHeaders ? originHeaders : undefined),
       ...defaultResponseHeaders,
-      [Headers.gcdnCache]: CacheHitHeader.PASS,
+      [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
     })
   }
 
@@ -291,7 +293,7 @@ export const graphql: Handler = async function (req, res) {
     },
     {
       ...defaultResponseHeaders,
-      [Headers.gcdnCache]: CacheHitHeader.PASS,
+      [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
     },
   )
 }

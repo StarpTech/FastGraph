@@ -1,12 +1,10 @@
 import test from 'ava'
-import { buildSchema, graphqlSync, parse } from 'graphql'
+import { buildSchema, parse } from 'graphql'
 import {
   extractTypes,
   hasIntersectedTypes,
-  introspectionQuery,
   requiresAuth,
 } from './graphql-utils'
-import { createKVNamespaces, getKVEntries, mockFetch } from './test-utils'
 import { readFileSync } from 'fs'
 
 const testSchema = readFileSync('./testdata/star_wars.graphql', 'utf8')

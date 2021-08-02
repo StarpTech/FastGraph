@@ -6,7 +6,6 @@ import {
   visitWithTypeInfo,
   GraphQLSchema,
   buildClientSchema,
-  validateSchema,
   isScalarType,
   getNamedType,
   BREAK,
@@ -62,6 +61,18 @@ export function extractTypes(
   return types
 }
 
+export async function fetchSchema(
+  introspectionUrl: string,
+  headers: Headers = new Headers(),
+) {
+  const schema = await getClientSchema(introspectionUrl, headers)
+  if (schema) {
+    return schema
+  } else {
+    throw new Error('Schema could not updated from introspection endpoint')
+  }
+}
+
 export function requiresAuth(
   directiveName: string,
   schema: GraphQLSchema,
@@ -111,12 +122,7 @@ export async function getClientSchema(
   })
   const { data } = await resp.json()
   if (data && !data.errors) {
-    const schema = buildClientSchema(data)
-    const errors = validateSchema(schema)
-
-    if (errors.length === 0) {
-      return schema
-    }
+    return buildClientSchema(data)
   }
 
   return null
