@@ -36,7 +36,7 @@ export const apq: Handler = async function (req, res) {
   if (!result) {
     if (query) {
       if (
-        timingSafeEqual(
+        !timingSafeEqual(
           Buffer.from(await SHA256(query)),
           Buffer.from(persistedQuery.sha256Hash),
         )
