@@ -274,3 +274,36 @@ test.serial('Should return error becasue APQ could not be found', async (t) => {
     '{"data":{"errors":[{"extensions":{"code":"PERSISTED_QUERY_NOT_FOUND"}}]}}',
   )
 })
+
+
+test.serial('Should error when invalid APQ version is used', async (t) => {
+  NewKVNamespace({
+    name: 'APQ_CACHE',
+  })
+
+  let req = WorktopRequest(
+    'GET',
+    null,
+    new URLSearchParams(
+      'query={__typename}&extensions={"persistedQuery":{"version":2,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38ooooooooo"}}',
+    ),
+  )
+  let res = WorktopResponse()
+
+  const originResponse = JSON.stringify({
+    data: {
+      droid: {
+        id: 123,
+      },
+    },
+  })
+  const m = mockFetch(originResponse, {
+    'content-type': 'application/json',
+  }).mock()
+  t.teardown(() => m.revert())
+
+  await apq(req, res)
+
+  t.is(res.statusCode, 400)
+  t.deepEqual(res.body, '"Unsupported persisted query version"')
+})

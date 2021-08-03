@@ -36,6 +36,11 @@ export const apq: Handler = async function (req, res) {
   }
 
   const { persistedQuery } = JSON.parse(extensionsRawJson) as APQExtensions
+
+  if (persistedQuery.version !== 1) {
+    return res.send(400, 'Unsupported persisted query version')
+  }
+
   let query = req.query.get('query')
 
   const result = await find(persistedQuery.sha256Hash)
