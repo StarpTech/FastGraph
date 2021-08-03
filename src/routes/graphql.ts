@@ -36,7 +36,16 @@ const scope: Scope = SCOPE as Scope
 const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
 const authDirectiveName = AUTH_DIRECTIVE
 
-// webpack
+/**
+ * Only one Workers instance runs on each of the many global Cloudflare edge servers.
+ * Each Workers instance can consume up to 128MB of memory.
+ * Use global variables to persist data between requests on individual nodes;
+ * note however, that nodes are occasionally evicted from memory.
+ * https://developers.cloudflare.com/workers/platform/limits#memory
+ * 
+ * This means that the graphql schema is cached for the second request on every edge server
+ * but may be rebuild when the worker is exited due to memory limit.
+ */
 declare const SCHEMA_STRING: string
 let schemaString = LZUTF8.decompress(SCHEMA_STRING, {
   inputEncoding: 'StorageBinaryString',
