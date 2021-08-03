@@ -8,6 +8,8 @@
   </a>
 </div>
 
+<div align="center">Smart GraphQL CDN on Cloudflare edges with zero configuration</div>
+
 ## Features
 
 - Cache POST GraphQL queries
