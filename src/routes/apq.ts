@@ -48,8 +48,8 @@ export const apq: Handler = async function (req, res) {
     query = result.query
   }
 
-  // if query could not be found in cache, we will assume the
-  // action is to register it
+  // if query could not be found in cache, we will assume
+  // the next action is to register the APQ
   if (!result) {
     // check if APQ hash is matching with the query hash
     if (query) {
