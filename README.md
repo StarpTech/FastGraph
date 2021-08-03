@@ -30,7 +30,7 @@ We provide different features to work with authenticated data:
 2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` GraphQL directive. When matched the request is handled as scope `AUTHENTICATED`.
 3. `PRIVATE_TYPES=User,Profile` The request is validated for the presence of specific GraphQL types. When matched the request is handled as scope `AUTHENTICATED`.
 
-In order to use option `2` and `3` you have to put your schema in `schema.graphql`. The schema is built and injected at build-time into the worker script. This is the only solution to provide good latency with increasing schema size. The schema size is limited to approximately `800KB` after normalization and compression. The worker script size is itself [limited](https://developers.cloudflare.com/workers/platform/limits) to `1MB` from cloudflare. **Don't forget to validate your schema before the deployment.**
+In order to use option `2` and `3` you have to put your schema in the file `schema.graphql`. The schema is built and injected at build-time into the worker script. This is the only solution to provide good latency with increasing schema size. The schema size is limited to approximately `800KB` after normalization and compression. The worker script size is itself [limited](https://developers.cloudflare.com/workers/platform/limits) to `1MB` from cloudflare. If you want to update your schema you have to redeploy your worker. **Don't forget to validate your schema before you trigger the deployment.**
 
 ## Getting Started
 
