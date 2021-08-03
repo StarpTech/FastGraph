@@ -2,7 +2,7 @@
   "private": true,
   "version": "0.0.0",
   "main": "dist/worker.production.js",
-  "description": "graphcdn",
+  "description": "fastgraph",
   "license": "MIT",
   "scripts": {
     "dev": "wrangler dev",

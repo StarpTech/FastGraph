@@ -1,9 +1,9 @@
-name = "graphcdn"
+name = "fastgraph"
 type = "javascript"
 
 account_id = "1a2a1312f9b14c0611a47d3a511472f7"
 workers_dev = true
-route = "graphcdn.microhug.com/*"
+route = "fastgraph.microhug.com/*"
 zone_id = ""
 target_type = "javascript"
 usage_model= "unbound"

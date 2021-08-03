@@ -51,8 +51,8 @@ test.serial('Should return query result and store APQ', async (t) => {
     [Headers.cacheControl]:
       'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
-    [Headers.gcdnOriginStatusCode]: '200',
-    [Headers.gcdnOriginStatusText]: 'OK',
+    [Headers.fgOriginStatusCode]: '200',
+    [Headers.fgOriginStatusText]: 'OK',
   })
 
   t.is(res.statusCode, 200)
@@ -112,8 +112,8 @@ test.serial('Should pass query variables and operationName to origin', async (t)
     [Headers.cacheControl]:
       'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
-    [Headers.gcdnOriginStatusCode]: '200',
-    [Headers.gcdnOriginStatusText]: 'OK',
+    [Headers.fgOriginStatusCode]: '200',
+    [Headers.fgOriginStatusText]: 'OK',
   })
 
   t.is(res.statusCode, 200)
@@ -164,8 +164,8 @@ test.serial('Should respect max-age directive from origin', async (t) => {
     [Headers.cacheControl]:
       'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
-    [Headers.gcdnOriginStatusCode]: '200',
-    [Headers.gcdnOriginStatusText]: 'OK',
+    [Headers.fgOriginStatusCode]: '200',
+    [Headers.fgOriginStatusText]: 'OK',
   })
 
   t.is(res.statusCode, 200)

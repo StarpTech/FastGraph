@@ -122,9 +122,9 @@ export const apq: Handler = async function (req, res) {
   const headers: Record<string, string> = {
     [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
     [HTTPHeaders.contentType]: 'application/json',
-    [HTTPHeaders.gcdnOriginStatusCode]: originResponse.status.toString(),
-    [HTTPHeaders.gcdnOriginStatusText]: originResponse.statusText.toString(),
-    [HTTPHeaders.gcdnCache]: isCacheable(originResponse)
+    [HTTPHeaders.fgOriginStatusCode]: originResponse.status.toString(),
+    [HTTPHeaders.fgOriginStatusText]: originResponse.statusText.toString(),
+    [HTTPHeaders.fgCache]: isCacheable(originResponse)
       ? CacheHitHeader.HIT
       : CacheHitHeader.MISS,
   }

@@ -1,10 +1,10 @@
 export enum Headers {
-  // GraphCDN
-  gcdnCache = 'gcdn-cache',
-  gcdnOriginStatusCode = 'gcdn-origin-status-code',
-  gcdnOriginStatusText = 'gcdn-origin-status-text',
-  gcdnOriginIgnoreCacheHeaders = 'gcdn-origin-ignore-cache-headers',
-  gcdnScope = 'gcdn-scope',
+  // FastGraph
+  fgCache = 'fastgraph-cache',
+  fgOriginStatusCode = 'fastgraph-origin-status-code',
+  fgOriginStatusText = 'fastgraph-origin-status-text',
+  fgOriginIgnoreCacheHeaders = 'fastgraph-origin-ignore-cache-headers',
+  fgScope = 'fastgraph-scope',
 
   // Common
   setCookie = 'set-cookie',

@@ -59,16 +59,16 @@ test.serial(
     const kvEntries = getKVEntries(queryStore)
     const metadataEntries = Object.fromEntries(metadata)
 
-    const graphCDNHeaders = {
+    const fastGraphHeaders = {
       [Headers.cacheControl]:
         'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
       [Headers.contentSecurityPolicy]: "default-src 'none'",
       [Headers.contentType]: 'application/json',
       [Headers.date]: 'Fri, 30 Jul 2021 18:46:39 GMT',
-      [Headers.gcdnOriginStatusCode]: '200',
-      [Headers.gcdnOriginStatusText]: 'OK',
-      [Headers.gcdnOriginIgnoreCacheHeaders]: 'false',
-      [Headers.gcdnScope]: Scope.PUBLIC,
+      [Headers.fgOriginStatusCode]: '200',
+      [Headers.fgOriginStatusText]: 'OK',
+      [Headers.fgOriginIgnoreCacheHeaders]: 'false',
+      [Headers.fgScope]: Scope.PUBLIC,
       [Headers.strictTransportSecurity]:
         'max-age=31536000; includeSubdomains; preload',
       [Headers.vary]: 'Accept-Encoding, Accept, X-Requested-With, Origin',
@@ -77,8 +77,8 @@ test.serial(
     }
 
     t.deepEqual(headers, {
-      ...graphCDNHeaders,
-      [Headers.gcdnCache]: CacheHitHeader.MISS,
+      ...fastGraphHeaders,
+      [Headers.fgCache]: CacheHitHeader.MISS,
       [Headers.xCache]: CacheHitHeader.MISS,
     })
 
@@ -87,8 +87,8 @@ test.serial(
         {
           body: originResponseJson,
           headers: {
-            ...graphCDNHeaders,
-            [Headers.gcdnCache]: CacheHitHeader.MISS,
+            ...fastGraphHeaders,
+            [Headers.fgCache]: CacheHitHeader.MISS,
             [Headers.xCache]: CacheHitHeader.MISS,
           },
         },
@@ -111,10 +111,10 @@ test.serial(
     headers = Object.fromEntries(res.headers)
 
     t.deepEqual(headers, {
-      ...graphCDNHeaders,
-      [Headers.gcdnScope]: Scope.PUBLIC,
+      ...fastGraphHeaders,
+      [Headers.fgScope]: Scope.PUBLIC,
       [Headers.age]: '0',
-      [Headers.gcdnCache]: CacheHitHeader.HIT,
+      [Headers.fgCache]: CacheHitHeader.HIT,
       [Headers.xCache]: CacheHitHeader.HIT,
     })
   },
@@ -157,12 +157,12 @@ test.serial(
     const metadataEntries = Object.fromEntries(metadata)
 
     t.like(headers, {
-      [Headers.gcdnScope]: Scope.AUTHENTICATED,
+      [Headers.fgScope]: Scope.AUTHENTICATED,
       [Headers.cacheControl]:
         'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
       [Headers.vary]:
         'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
-      [Headers.gcdnCache]: CacheHitHeader.MISS,
+      [Headers.fgCache]: CacheHitHeader.MISS,
       [Headers.xCache]: CacheHitHeader.MISS,
     })
 
@@ -171,12 +171,12 @@ test.serial(
         {
           body: originResponseJson,
           headers: {
-            [Headers.gcdnScope]: Scope.AUTHENTICATED,
+            [Headers.fgScope]: Scope.AUTHENTICATED,
             [Headers.cacheControl]:
               'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
             [Headers.vary]:
               'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
-            [Headers.gcdnCache]: CacheHitHeader.MISS,
+            [Headers.fgCache]: CacheHitHeader.MISS,
             [Headers.xCache]: CacheHitHeader.MISS,
           },
         },
@@ -199,13 +199,13 @@ test.serial(
     headers = Object.fromEntries(res.headers)
 
     t.like(headers, {
-      [Headers.gcdnScope]: Scope.AUTHENTICATED,
+      [Headers.fgScope]: Scope.AUTHENTICATED,
       [Headers.vary]:
         'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
       'cache-control':
         'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
       [Headers.age]: '0',
-      [Headers.gcdnCache]: CacheHitHeader.HIT,
+      [Headers.fgCache]: CacheHitHeader.HIT,
       [Headers.xCache]: CacheHitHeader.HIT,
     })
   },
@@ -259,7 +259,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   const metadataEntries = Object.fromEntries(metadata)
 
   t.like(headers, {
-    [Headers.gcdnCache]: CacheHitHeader.PASS,
+    [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
   })
 
@@ -272,7 +272,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   headers = Object.fromEntries(res.headers)
 
   t.like(headers, {
-    [Headers.gcdnCache]: CacheHitHeader.PASS,
+    [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
   })
 })
@@ -323,7 +323,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
         headers: {
           [Headers.cacheControl]:
             'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
-          [Headers.gcdnCache]: CacheHitHeader.MISS,
+          [Headers.fgCache]: CacheHitHeader.MISS,
           [Headers.xCache]: CacheHitHeader.MISS,
         },
       },
@@ -349,7 +349,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
     [Headers.cacheControl]:
       'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
     [Headers.age]: '0',
-    [Headers.gcdnCache]: CacheHitHeader.HIT,
+    [Headers.fgCache]: CacheHitHeader.HIT,
     [Headers.xCache]: CacheHitHeader.HIT,
   })
 })

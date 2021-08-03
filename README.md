@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="logo.png" alt="graphcdn" />
+  <img src="logo-new.png" alt="fastgraph" />
 </div>
 
 <div align="center">
-  <a href="https://github.com/StarpTech/GraphCDN/actions?query=workflow%3Aci">
-    <img src="https://github.com/StarpTech/GraphCDN/actions/workflows/ci.yml/badge.svg?event=push" alt="CI" />
+  <a href="https://github.com/StarpTech/FastGraph/actions?query=workflow%3Aci">
+    <img src="https://github.com/StarpTech/FastGraph/actions/workflows/ci.yml/badge.svg?event=push" alt="CI" />
   </a>
 </div>
 
@@ -60,13 +60,13 @@ Set the variables in your `wrangler.toml`.
 
 ## Example
 
-### GraphCDN cURL request
+### FastGraph cURL request
 
 ```sh
 curl --request POST \
   -v --compressed \
   -o /dev/null -sS \
-  --url https://graphcdn.starptech.workers.dev \
+  --url https://fastgraph.starptech.workers.dev \
   --header 'Accept-Encoding: gzip' \
   --header 'Content-Type: application/json' \
   --data '{"query":"{\n  projects {\n    edges {\n      node {\n        id\n      }\n    }\n  }\n}\n"}' \
@@ -88,12 +88,12 @@ curl --request POST \
 
 ## Latency Results
 
-Here are some sample response times using GraphCDN vs. making requests to the Gitlab GraphQL API directly:
+Here are some sample response times using FastGraph vs. making requests to the Gitlab GraphQL API directly:
 
 | Request Method                               | Test 1 | Test 2 | Test 3 |
 | -------------------------------------------- | ------ | ------ | ------ |
 | [Gitlab API](https://gitlab.com/api/graphql) | 0.90s  | 1.01s  | 1.08s  |
-| With GraphCDN                                | 0.15s  | 0.13s  | 0.11s  |
+| With FastGraph                                | 0.15s  | 0.13s  | 0.11s  |
 
 ## Performance & Security
 
@@ -107,7 +107,7 @@ You can use the [free tier](https://developers.cloudflare.com/workers/platform/l
 
 ## Development & Deployment
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/StarpTech/GraphCDN)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/StarpTech/FastGraph)
 
 ```sh
 npm run dev

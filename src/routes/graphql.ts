@@ -73,8 +73,8 @@ export const graphql: Handler = async function (req, res) {
     [HTTPHeaders.contentType]: 'application/json',
     [HTTPHeaders.date]: new Date(Date.now()).toUTCString(),
     [HTTPHeaders.xCache]: CacheHitHeader.MISS,
-    [HTTPHeaders.gcdnCache]: CacheHitHeader.MISS,
-    [HTTPHeaders.gcdnOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
+    [HTTPHeaders.fgCache]: CacheHitHeader.MISS,
+    [HTTPHeaders.fgOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
       ? 'true'
       : 'false',
     [HTTPHeaders.xFrameOptions]: 'deny',
@@ -96,7 +96,6 @@ export const graphql: Handler = async function (req, res) {
   if (process.env.NODE_ENV === 'test' && originalBody.schema) {
     schema = buildGraphQLSchema(originalBody.schema)
   } else if (!schema && schemaString) {
-    console.log('Rebuild graphql schema')
     schema = buildGraphQLSchema(schemaString)
   }
 
@@ -129,7 +128,7 @@ export const graphql: Handler = async function (req, res) {
   } catch (error) {
     return res.send(400, error, {
       ...defaultResponseHeaders,
-      [HTTPHeaders.gcdnCache]: CacheHitHeader.ERROR,
+      [HTTPHeaders.fgCache]: CacheHitHeader.ERROR,
       [HTTPHeaders.xCache]: CacheHitHeader.HIT,
     })
   }
@@ -158,7 +157,7 @@ export const graphql: Handler = async function (req, res) {
 
     if (value) {
       const headers: Record<string, string> = {
-        [HTTPHeaders.gcdnCache]: CacheHitHeader.HIT,
+        [HTTPHeaders.fgCache]: CacheHitHeader.HIT,
         [HTTPHeaders.xCache]: CacheHitHeader.HIT,
       }
       if (metadata) {
@@ -206,9 +205,9 @@ export const graphql: Handler = async function (req, res) {
     )
   } catch (error) {
     if (error instanceof HTTPResponseError) {
-      defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusCode] =
+      defaultResponseHeaders[HTTPHeaders.fgOriginStatusCode] =
         error.response.status.toString()
-      defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusText] =
+      defaultResponseHeaders[HTTPHeaders.fgOriginStatusText] =
         error.response.statusText.toString()
       return res.send(
         500,
@@ -224,9 +223,9 @@ export const graphql: Handler = async function (req, res) {
     throw error
   }
 
-  defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusCode] =
+  defaultResponseHeaders[HTTPHeaders.fgOriginStatusCode] =
     originResponse.status.toString()
-  defaultResponseHeaders[HTTPHeaders.gcdnOriginStatusText] =
+  defaultResponseHeaders[HTTPHeaders.fgOriginStatusText] =
     originResponse.statusText.toString()
 
   const isOriginResponseCacheable =
@@ -254,15 +253,15 @@ export const graphql: Handler = async function (req, res) {
       }
 
       const headers: Record<string, string> = {
-        [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
+        [HTTPHeaders.fgCache]: CacheHitHeader.PASS,
         [HTTPHeaders.xCache]: CacheHitHeader.PASS,
-        [HTTPHeaders.gcdnScope]: Scope.PUBLIC,
+        [HTTPHeaders.fgScope]: Scope.PUBLIC,
         [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
         ...defaultResponseHeaders,
       }
 
       if (isPrivateAndCacheable) {
-        headers[HTTPHeaders.gcdnScope] = Scope.AUTHENTICATED
+        headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
         headers[
           HTTPHeaders.cacheControl
         ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
@@ -289,7 +288,7 @@ export const graphql: Handler = async function (req, res) {
     // First call or mutation requests
     return res.send(200, originResult, {
       ...defaultResponseHeaders,
-      [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
+      [HTTPHeaders.fgCache]: CacheHitHeader.PASS,
     })
   }
 
@@ -301,7 +300,7 @@ export const graphql: Handler = async function (req, res) {
     },
     {
       ...defaultResponseHeaders,
-      [HTTPHeaders.gcdnCache]: CacheHitHeader.PASS,
+      [HTTPHeaders.fgCache]: CacheHitHeader.PASS,
     },
   )
 }
