@@ -48,7 +48,10 @@ export const apq: Handler = async function (req, res) {
     query = result.query
   }
 
+  // if query could not be found in cache, we will assume the
+  // action is to register it
   if (!result) {
+    // check if APQ hash is matching with the query hash
     if (query) {
       if (
         !timingSafeEqual(
@@ -70,6 +73,7 @@ export const apq: Handler = async function (req, res) {
         ),
       )
     } else {
+      // when APQ could not be found the client must retry with the original query
       return res.send(200, {
         data: {
           errors: [
