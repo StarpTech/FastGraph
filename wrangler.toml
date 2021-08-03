@@ -3,8 +3,6 @@ type = "javascript"
 
 account_id = "1a2a1312f9b14c0611a47d3a511472f7"
 workers_dev = true
-route = "fastgraph.fastgraph.de/*"
-zone_id = ""
 target_type = "javascript"
 usage_model= "unbound"
 kv_namespaces = [ 

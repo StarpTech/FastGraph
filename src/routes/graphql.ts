@@ -20,6 +20,15 @@ import { find, save } from '../stores/QueryCache'
 import { HTTPResponseError } from '../errors'
 import { GraphQLSchema, parse } from 'graphql'
 
+declare const ORIGIN_URL: string
+declare const DEFAULT_TTL: string
+declare const PRIVATE_TYPES: string
+declare const SCOPE: string
+declare const IGNORE_ORIGIN_CACHE_HEADERS: string
+declare const AUTH_DIRECTIVE: string
+declare const SWR: string
+declare const SCHEMA_STRING: string
+
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
@@ -84,10 +93,8 @@ export const graphql: Handler = async function (req, res) {
   let content = originalBody.query
 
   // only for testing
-  if (process.env.NODE_ENV === 'test') {
-    if (originalBody.schema) {
-      schema = buildGraphQLSchema(originalBody.schema)
-    }
+  if (process.env.NODE_ENV === 'test' && originalBody.schema) {
+    schema = buildGraphQLSchema(originalBody.schema)
   } else if (!schema && schemaString) {
     schema = buildGraphQLSchema(schemaString)
   }
