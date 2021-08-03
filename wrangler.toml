@@ -3,13 +3,13 @@ type = "javascript"
 
 account_id = "1a2a1312f9b14c0611a47d3a511472f7"
 workers_dev = true
-route = "fastgraph.microhug.com/*"
+route = "fastgraph.fastgraph.de/*"
 zone_id = ""
 target_type = "javascript"
 usage_model= "unbound"
 kv_namespaces = [ 
-         { binding = "QUERY_CACHE", id = "4b5096c559034695be4d83fa91540c2c", preview_id = "4b5096c559034695be4d83fa91540c2c" },
-         { binding = "APQ_CACHE", id = "82297ebf17a64833a33b865703e40fca", preview_id = "82297ebf17a64833a33b865703e40fca" }
+         { binding = "QUERY_CACHE", id = "7a9f62c214174394b4e3974acc949d07", preview_id = "7a9f62c214174394b4e3974acc949d07" },
+         { binding = "APQ_CACHE", id = "9c2e58947cad40a0ac8f0f3340181887", preview_id = "9c2e58947cad40a0ac8f0f3340181887" }
 ]
 
 [vars]

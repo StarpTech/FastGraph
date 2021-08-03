@@ -1,4 +1,4 @@
-import type { Handler } from 'worktop'
+import { Handler } from 'worktop'
 import { SHA256 } from 'worktop/crypto'
 import retry from 'async-retry'
 import LZUTF8 from 'lzutf8'
@@ -20,14 +20,6 @@ import { find, save } from '../stores/QueryCache'
 import { HTTPResponseError } from '../errors'
 import { GraphQLSchema, parse } from 'graphql'
 
-declare const ORIGIN_URL: string
-declare const DEFAULT_TTL: string
-declare const PRIVATE_TYPES: string
-declare const SCOPE: string
-declare const IGNORE_ORIGIN_CACHE_HEADERS: string
-declare const AUTH_DIRECTIVE: string
-declare const SWR: string
-
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
@@ -42,11 +34,10 @@ const authDirectiveName = AUTH_DIRECTIVE
  * Use global variables to persist data between requests on individual nodes;
  * note however, that nodes are occasionally evicted from memory.
  * https://developers.cloudflare.com/workers/platform/limits#memory
- * 
+ *
  * This means that the graphql schema is cached for the second request on every edge server
  * but may be rebuild when the worker is exited due to memory limit.
  */
-declare const SCHEMA_STRING: string
 let schemaString = LZUTF8.decompress(SCHEMA_STRING, {
   inputEncoding: 'StorageBinaryString',
 })
@@ -93,8 +84,10 @@ export const graphql: Handler = async function (req, res) {
   let content = originalBody.query
 
   // only for testing
-  if (process.env.NODE_ENV === 'test' && originalBody.schema) {
-    schema = buildGraphQLSchema(originalBody.schema)
+  if (process.env.NODE_ENV === 'test') {
+    if (originalBody.schema) {
+      schema = buildGraphQLSchema(originalBody.schema)
+    }
   } else if (!schema && schemaString) {
     schema = buildGraphQLSchema(schemaString)
   }
