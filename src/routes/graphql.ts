@@ -43,7 +43,7 @@ let schemaString = LZUTF8.decompress(SCHEMA_STRING, {
 })
 let schema: GraphQLSchema
 
-type GraphQLRequest = {
+export type GraphQLRequest = {
   query: string
   operationName?: string
   variables?: Record<string, any>

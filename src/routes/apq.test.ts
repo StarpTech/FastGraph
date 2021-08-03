@@ -37,6 +37,75 @@ test.serial('Should return query result and store APQ', async (t) => {
 
   await apq(req, res)
 
+  t.like(m.getFetchArgs(), {
+    input: 'https://grapql-endpoint/',
+    init: {
+      method: 'POST',
+      body: '{"query":"{__typename}"}',
+    },
+  })
+
+  const headers = Object.fromEntries(res.headers)
+
+  t.like(headers, {
+    [Headers.cacheControl]:
+      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+    [Headers.contentType]: 'application/json',
+    [Headers.gcdnOriginStatusCode]: '200',
+    [Headers.gcdnOriginStatusText]: 'OK',
+  })
+
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
+
+  const kvEntries = getKVEntries(store)
+
+  t.deepEqual(kvEntries, {
+    'apq-cache::ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38':
+      {
+        query: '{__typename}',
+      },
+  })
+})
+
+test.serial('Should pass query variables to origin', async (t) => {
+  const { store } = NewKVNamespace({
+    name: 'APQ_CACHE',
+  })
+
+  let req = WorktopRequest(
+    'GET',
+    null,
+    new URLSearchParams(
+      `variables=${JSON.stringify({
+        echo: 'world',
+      })}&query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}`,
+    ),
+  )
+  let res = WorktopResponse()
+
+  const originResponse = JSON.stringify({
+    data: {
+      droid: {
+        id: 123,
+      },
+    },
+  })
+  const m = mockFetch(originResponse, {
+    'content-type': 'application/json',
+  }).mock()
+  t.teardown(() => m.revert())
+
+  await apq(req, res)
+
+  t.like(m.getFetchArgs(), {
+    input: 'https://grapql-endpoint/',
+    init: {
+      method: 'POST',
+      body: '{"query":"{__typename}","variables":{"echo":"world"}}',
+    },
+  })
+
   const headers = Object.fromEntries(res.headers)
 
   t.like(headers, {

@@ -4,6 +4,7 @@ import { isCacheable } from 'worktop/cache'
 import { find, save } from '../stores/APQCache'
 import { CacheHitHeader, Headers as HTTPHeaders, parseMaxAge } from '../utils'
 import { HTTPResponseError } from '../errors'
+import { GraphQLRequest } from './graphql'
 
 declare const DEFAULT_TTL: string
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
@@ -21,6 +22,7 @@ type APQExtensions = {
   persistedQuery: {
     version: number
     sha256Hash: string
+    variables?: Record<string, number | string>
   }
 }
 
@@ -77,10 +79,17 @@ export const apq: Handler = async function (req, res) {
     }
   }
 
+  let variables = req.query.get('variables')
+
+  const q = query!
+  const body: GraphQLRequest = { query: q }
+
+  if (variables) {
+    body.variables = JSON.parse(variables)
+  }
+
   const originResponse = await fetch(originUrl, {
-    body: JSON.stringify({
-      query,
-    }),
+    body: JSON.stringify(body),
     headers: req.headers,
     method: 'POST',
   })

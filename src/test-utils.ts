@@ -225,11 +225,16 @@ export const mockFetch = (
 ) => {
   // @ts-ignore
   const oldFetch = globalThis.fetch
+  let fetchInput: RequestInfo
+  let fetchInit: RequestInit | undefined
 
   return {
     mock() {
       // @ts-ignore - faking it
-      globalThis.fetch = async () => {
+      globalThis.fetch = async (input: RequestInfo, init?: RequestInit) => {
+        fetchInput = input
+        fetchInit = init
+
         return {
           ok: true,
           status: 200,
@@ -243,8 +248,16 @@ export const mockFetch = (
 
       return this
     },
+    getFetchArgs() {
+      return {
+        input: fetchInput,
+        init: fetchInit,
+      }
+    },
     revert() {
       globalThis.fetch = oldFetch
+      fetchInput = ''
+      fetchInit = undefined
     },
   }
 }
