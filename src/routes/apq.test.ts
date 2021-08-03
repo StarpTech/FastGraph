@@ -68,7 +68,7 @@ test.serial('Should return query result and store APQ', async (t) => {
   })
 })
 
-test.serial('Should pass query variables to origin', async (t) => {
+test.serial('Should pass query variables and operationName to origin', async (t) => {
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -79,7 +79,7 @@ test.serial('Should pass query variables to origin', async (t) => {
     new URLSearchParams(
       `variables=${JSON.stringify({
         echo: 'world',
-      })}&query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}`,
+      })}&operationName=foo&query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}`,
     ),
   )
   let res = WorktopResponse()
@@ -102,7 +102,7 @@ test.serial('Should pass query variables to origin', async (t) => {
     input: 'https://grapql-endpoint/',
     init: {
       method: 'POST',
-      body: '{"query":"{__typename}","variables":{"echo":"world"}}',
+      body: '{"query":"{__typename}","operationName":"foo","variables":{"echo":"world"}}',
     },
   })
 

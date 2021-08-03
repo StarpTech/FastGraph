@@ -79,11 +79,15 @@ export const apq: Handler = async function (req, res) {
     }
   }
 
+  let operationName = req.query.get('operationName')
   let variables = req.query.get('variables')
 
   const q = query!
   const body: GraphQLRequest = { query: q }
 
+  if (operationName) {
+    body.operationName = operationName
+  }
   if (variables) {
     body.variables = JSON.parse(variables)
   }
