@@ -93,7 +93,7 @@ Here are some sample response times using FastGraph vs. making requests to the G
 | Request Method                               | Test 1 | Test 2 | Test 3 |
 | -------------------------------------------- | ------ | ------ | ------ |
 | [Gitlab API](https://gitlab.com/api/graphql) | 0.90s  | 1.01s  | 1.08s  |
-| With FastGraph                                | 0.15s  | 0.13s  | 0.11s  |
+| With FastGraph                               | 0.15s  | 0.13s  | 0.11s  |
 
 ## Performance & Security
 

@@ -235,7 +235,6 @@ export const graphql: Handler = async function (req, res) {
     (isOriginResponseCacheable && isPrivateAndCacheable)
 
   const contentType = originResponse.headers.get(HTTPHeaders.contentType)
-  const originHeaders = Object.fromEntries(originResponse.headers)
 
   if (contentType?.includes('application/json')) {
     const originResult = await originResponse.json()

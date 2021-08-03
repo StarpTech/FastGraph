@@ -119,14 +119,14 @@ export const apq: Handler = async function (req, res) {
     maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
   }
 
+  const cacheable = isCacheable(originResponse)
+
   const headers: Record<string, string> = {
     [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
     [HTTPHeaders.contentType]: 'application/json',
     [HTTPHeaders.fgOriginStatusCode]: originResponse.status.toString(),
     [HTTPHeaders.fgOriginStatusText]: originResponse.statusText.toString(),
-    [HTTPHeaders.fgCache]: isCacheable(originResponse)
-      ? CacheHitHeader.HIT
-      : CacheHitHeader.MISS,
+    [HTTPHeaders.fgCache]: cacheable ? CacheHitHeader.HIT : CacheHitHeader.MISS,
   }
 
   return res.send(200, await originResponse.json(), headers)
