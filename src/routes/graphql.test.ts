@@ -64,7 +64,7 @@ test.serial(
 
     const fastGraphHeaders = {
       [Headers.cacheControl]:
-        'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+        'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.contentSecurityPolicy]: "default-src 'none'",
       [Headers.contentType]: 'application/json',
       [Headers.date]: 'Fri, 30 Jul 2021 18:46:39 GMT',
@@ -165,7 +165,7 @@ test.serial(
     t.like(headers, {
       [Headers.fgScope]: Scope.AUTHENTICATED,
       [Headers.cacheControl]:
-        'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+        'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.vary]:
         'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
       [Headers.fgCache]: CacheHitHeader.MISS,
@@ -179,7 +179,7 @@ test.serial(
           headers: {
             [Headers.fgScope]: Scope.AUTHENTICATED,
             [Headers.cacheControl]:
-              'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+              'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
             [Headers.vary]:
               'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
             [Headers.fgCache]: CacheHitHeader.MISS,
@@ -209,7 +209,7 @@ test.serial(
       [Headers.vary]:
         'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
       'cache-control':
-        'private, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+        'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.age]: '0',
       [Headers.fgCache]: CacheHitHeader.HIT,
       [Headers.xCache]: CacheHitHeader.HIT,
@@ -270,6 +270,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.like(headers, {
     [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
+    [Headers.cacheControl]: 'public, no-cache',
   })
 
   t.deepEqual(kvEntries, {})
@@ -283,6 +284,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.like(headers, {
     [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
+    [Headers.cacheControl]: 'public, no-cache',
   })
 })
 
@@ -400,7 +402,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 
   t.is(
     headers['cache-control'],
-    'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+    'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
   )
 
   t.like(kvEntries, {
@@ -409,7 +411,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
         body: originResponseJson,
         headers: {
           [Headers.cacheControl]:
-            'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+            'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
           [Headers.fgCache]: CacheHitHeader.MISS,
           [Headers.xCache]: CacheHitHeader.MISS,
         },
@@ -434,7 +436,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     [Headers.age]: '0',
     [Headers.fgCache]: CacheHitHeader.HIT,
     [Headers.xCache]: CacheHitHeader.HIT,
@@ -469,5 +471,11 @@ test.serial(
       res.body,
       '{"error":"Unsupported content-type \\"text/html\\" from origin \\"https://grapql-endpoint/\\"."}',
     )
+
+    const headers = Object.fromEntries(res.headers)
+
+    t.like(headers, {
+      [Headers.cacheControl]: 'public, no-cache',
+    })
   },
 )

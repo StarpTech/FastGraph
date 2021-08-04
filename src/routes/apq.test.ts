@@ -52,7 +52,7 @@ test.serial('Should return query result and store APQ', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
     [Headers.fgOriginStatusCode]: '200',
     [Headers.fgOriginStatusText]: 'OK',
@@ -118,7 +118,7 @@ test.serial(
 
     t.like(headers, {
       [Headers.cacheControl]:
-        'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+        'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.contentType]: 'application/json',
       [Headers.fgOriginStatusCode]: '200',
       [Headers.fgOriginStatusText]: 'OK',
@@ -228,7 +228,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
+      'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
     [Headers.fgOriginStatusCode]: '200',
     [Headers.fgOriginStatusText]: 'OK',

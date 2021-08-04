@@ -22,6 +22,7 @@ API.onerror = (_req, _res, status, error) => {
     status,
     statusText,
     headers: {
+      [HTTPHeaders.cacheControl]: 'public, no-cache',
       [HTTPHeaders.contentType]: 'application/json',
     },
   })

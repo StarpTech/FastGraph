@@ -1,13 +1,9 @@
 import type { Handler } from 'worktop'
 import { SHA256, timingSafeEqual } from 'worktop/crypto'
-import { isCacheable } from 'worktop/cache'
+import { encode } from 'worktop/utils'
 import { find, save } from '../stores/APQCache'
-import { CacheHitHeader, Headers as HTTPHeaders, parseMaxAge } from '../utils'
-import { HTTPResponseError } from '../errors'
+import { Headers as HTTPHeaders } from '../utils'
 import { GraphQLRequest } from './graphql'
-
-declare const DEFAULT_TTL: string
-const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 
 declare const APQ_TTL: string
 const defaultAPQTTL = parseInt(APQ_TTL)
@@ -57,8 +53,8 @@ export const apq: Handler = async function (req, res) {
     if (query) {
       if (
         !timingSafeEqual(
-          Buffer.from(await SHA256(query)),
-          Buffer.from(persistedQuery.sha256Hash),
+          encode(await SHA256(query)),
+          encode(persistedQuery.sha256Hash),
         )
       ) {
         return res.send(400, 'provided sha does not match query')
@@ -103,14 +99,31 @@ export const apq: Handler = async function (req, res) {
     body.variables = JSON.parse(variables)
   }
 
-  const originResponse = await fetch(originUrl, {
+  let originResponse: Response
+
+  originResponse = await fetch(originUrl, {
     body: JSON.stringify(body),
     headers: req.headers,
     method: 'POST',
   })
+  let json = await originResponse.json()
 
   if (!originResponse.ok) {
-    throw new HTTPResponseError(originResponse)
+    return res.send(
+      originResponse.status,
+      {
+        error: `fetch error: ${originResponse.statusText}`,
+      },
+      {
+        [HTTPHeaders.cacheControl]: 'public, no-cache',
+      },
+    )
+  }
+
+  if (json?.errors) {
+    return res.send(500, json?.errors, {
+      [HTTPHeaders.cacheControl]: 'public, no-cache',
+    })
   }
 
   const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
@@ -119,9 +132,9 @@ export const apq: Handler = async function (req, res) {
     HTTPHeaders.cacheControl,
   )
 
-  let cacheMaxAge = defaultMaxAgeInSeconds
+  let cacheMaxAge = APQ_TTL
   const headers: Record<string, string> = {
-    [HTTPHeaders.cacheControl]: `public, max-age=${cacheMaxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
+    [HTTPHeaders.cacheControl]: `public, max-age=${cacheMaxAge}, stale-if-error=${swr}, stale-while-revalidate=${swr}`,
     [HTTPHeaders.contentType]: 'application/json',
     [HTTPHeaders.fgOriginStatusCode]: originResponse.status.toString(),
     [HTTPHeaders.fgOriginStatusText]: originResponse.statusText.toString(),
@@ -131,5 +144,5 @@ export const apq: Handler = async function (req, res) {
     headers[HTTPHeaders.cacheControl] = cacheControlHeader
   }
 
-  return res.send(200, await originResponse.json(), headers)
+  return res.send(200, json, headers)
 }

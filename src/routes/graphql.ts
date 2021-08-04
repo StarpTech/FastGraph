@@ -73,6 +73,7 @@ export const graphql: Handler = async function (req, res) {
   const defaultResponseHeaders: Record<string, string> = {
     [HTTPHeaders.contentType]: 'application/json',
     [HTTPHeaders.date]: new Date(Date.now()).toUTCString(),
+    [HTTPHeaders.cacheControl]: 'public, no-cache',
     [HTTPHeaders.xCache]: CacheHitHeader.MISS,
     [HTTPHeaders.fgCache]: CacheHitHeader.MISS,
     [HTTPHeaders.fgOriginIgnoreCacheHeaders]: ignoreOriginCacheHeaders
@@ -127,6 +128,8 @@ export const graphql: Handler = async function (req, res) {
       content = normalizeDocument(originalBody.query)
     }
   } catch (error) {
+    console.error(error)
+
     return res.send(400, error, {
       ...defaultResponseHeaders,
       [HTTPHeaders.fgCache]: CacheHitHeader.ERROR,
@@ -205,6 +208,8 @@ export const graphql: Handler = async function (req, res) {
       },
     )
   } catch (error) {
+    console.error(error)
+
     if (error instanceof HTTPResponseError) {
       defaultResponseHeaders[HTTPHeaders.fgOriginStatusCode] =
         error.response.status.toString()
@@ -245,8 +250,8 @@ export const graphql: Handler = async function (req, res) {
         [HTTPHeaders.fgCache]: CacheHitHeader.PASS,
         [HTTPHeaders.xCache]: CacheHitHeader.PASS,
         [HTTPHeaders.fgScope]: Scope.PUBLIC,
-        [HTTPHeaders.cacheControl]: `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=60, stale-while-revalidate=${swr}`,
         ...defaultResponseHeaders,
+        [HTTPHeaders.cacheControl]: `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`,
       }
 
       const cacheControlHeader = originResponse.headers.get(
@@ -258,7 +263,7 @@ export const graphql: Handler = async function (req, res) {
         headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
         headers[
           HTTPHeaders.cacheControl
-        ] = `private, max-age=${defaultMaxAgeInSeconds}, stale-if-error=60, stale-while-revalidate=${swr}`
+        ] = `private, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`
         headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       } else if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
