@@ -11,7 +11,7 @@ globalThis.PRIVATE_TYPES = ''
 // @ts-ignore
 globalThis.SCOPE = ''
 // @ts-ignore
-globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
 // @ts-ignore
 globalThis.AUTH_DIRECTIVE = 'auth'
 // @ts-ignore

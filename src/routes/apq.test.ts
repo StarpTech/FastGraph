@@ -10,6 +10,9 @@ import { Headers } from '../utils'
 import { apq } from './apq'
 
 test.serial('Should return query result and store APQ', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -71,6 +74,9 @@ test.serial('Should return query result and store APQ', async (t) => {
 test.serial(
   'Should pass query variables and operationName to origin',
   async (t) => {
+    // @ts-ignore
+    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
     const { store } = NewKVNamespace({
       name: 'APQ_CACHE',
     })
@@ -132,7 +138,64 @@ test.serial(
   },
 )
 
-test.serial('Should respect max-age directive from origin', async (t) => {
+test.serial('Should pass cache-control header as it is', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
+  const { store } = NewKVNamespace({
+    name: 'APQ_CACHE',
+  })
+
+  let req = WorktopRequest(
+    'GET',
+    null,
+    new URLSearchParams(
+      'query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}',
+    ),
+  )
+  let res = WorktopResponse()
+
+  const originResponse = JSON.stringify({
+    data: {
+      droid: {
+        id: 123,
+      },
+    },
+  })
+  const m = mockFetch(originResponse, {
+    'content-type': 'application/json',
+    'cache-control': 'public, max-age=65',
+  }).mock()
+  t.teardown(() => m.revert())
+
+  await apq(req, res)
+
+  const headers = Object.fromEntries(res.headers)
+
+  t.like(headers, {
+    [Headers.cacheControl]: 'public, max-age=65',
+    [Headers.contentType]: 'application/json',
+    [Headers.fgOriginStatusCode]: '200',
+    [Headers.fgOriginStatusText]: 'OK',
+  })
+
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
+
+  const kvEntries = getKVEntries(store)
+
+  t.deepEqual(kvEntries, {
+    'apq-cache::ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38':
+      {
+        query: '{__typename}',
+      },
+  })
+})
+
+test.serial('Should ignore cache-control from origin', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -165,7 +228,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
+      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
     [Headers.fgOriginStatusCode]: '200',
     [Headers.fgOriginStatusText]: 'OK',
@@ -185,6 +248,9 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 })
 
 test.serial('Should resolve query and make request to origin', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -256,6 +322,9 @@ test.serial('Should error when hash does not match', async (t) => {
 })
 
 test.serial('Should return error becasue APQ could not be found', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -279,6 +348,9 @@ test.serial('Should return error becasue APQ could not be found', async (t) => {
 })
 
 test.serial('Should error when invalid APQ version is used', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   NewKVNamespace({
     name: 'APQ_CACHE',
   })

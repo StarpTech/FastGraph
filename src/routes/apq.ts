@@ -18,6 +18,8 @@ const originUrl = ORIGIN_URL
 declare const SWR: string
 const swr = parseInt(SWR)
 
+declare const IGNORE_ORIGIN_CACHE_HEADERS: string
+
 type APQExtensions = {
   persistedQuery: {
     version: number
@@ -111,22 +113,22 @@ export const apq: Handler = async function (req, res) {
     throw new HTTPResponseError(originResponse)
   }
 
-  let maxAge = defaultMaxAgeInSeconds
-  const maxAgeHeaderValue = originResponse.headers.get(HTTPHeaders.cacheControl)
+  const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
 
-  if (maxAgeHeaderValue) {
-    const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
-    maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
-  }
+  const cacheControlHeader = originResponse.headers.get(
+    HTTPHeaders.cacheControl,
+  )
 
-  const cacheable = isCacheable(originResponse)
-
+  let cacheMaxAge = defaultMaxAgeInSeconds
   const headers: Record<string, string> = {
-    [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
+    [HTTPHeaders.cacheControl]: `public, max-age=${cacheMaxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
     [HTTPHeaders.contentType]: 'application/json',
     [HTTPHeaders.fgOriginStatusCode]: originResponse.status.toString(),
     [HTTPHeaders.fgOriginStatusText]: originResponse.statusText.toString(),
-    [HTTPHeaders.fgCache]: cacheable ? CacheHitHeader.HIT : CacheHitHeader.MISS,
+  }
+
+  if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
+    headers[HTTPHeaders.cacheControl] = cacheControlHeader
   }
 
   return res.send(200, await originResponse.json(), headers)

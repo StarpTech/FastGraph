@@ -34,7 +34,6 @@ const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
 const scope: Scope = SCOPE as Scope
-const ignoreOriginCacheHeaders = !!IGNORE_ORIGIN_CACHE_HEADERS
 const authDirectiveName = AUTH_DIRECTIVE
 
 /**
@@ -68,6 +67,8 @@ export const graphql: Handler = async function (req, res) {
       error: 'Request has no "query" field.',
     })
   }
+
+  const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
 
   const defaultResponseHeaders: Record<string, string> = {
     [HTTPHeaders.contentType]: 'application/json',
@@ -240,32 +241,30 @@ export const graphql: Handler = async function (req, res) {
     const originResult = await originResponse.json()
 
     if (isCacheable) {
-      let maxAge = defaultMaxAgeInSeconds
-      const maxAgeHeaderValue = originResponse.headers.get(
-        HTTPHeaders.cacheControl,
-      )
-      if (ignoreOriginCacheHeaders === false) {
-        if (maxAgeHeaderValue) {
-          const parsedMaxAge = parseMaxAge(maxAgeHeaderValue)
-          maxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
-        }
-      }
-
       const headers: Record<string, string> = {
         [HTTPHeaders.fgCache]: CacheHitHeader.PASS,
         [HTTPHeaders.xCache]: CacheHitHeader.PASS,
         [HTTPHeaders.fgScope]: Scope.PUBLIC,
-        [HTTPHeaders.cacheControl]: `public, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${swr}`,
+        [HTTPHeaders.cacheControl]: `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=60, stale-while-revalidate=${swr}`,
         ...defaultResponseHeaders,
       }
+
+      const cacheControlHeader = originResponse.headers.get(
+        HTTPHeaders.cacheControl,
+      )
+      let cacheMaxAge = defaultMaxAgeInSeconds
 
       if (isPrivateAndCacheable) {
         headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
         headers[
           HTTPHeaders.cacheControl
-        ] = `private, max-age=${maxAge}, stale-if-error=60, stale-while-revalidate=${maxAge}`
+        ] = `private, max-age=${defaultMaxAgeInSeconds}, stale-if-error=60, stale-while-revalidate=${swr}`
         headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
+      } else if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
+        headers[HTTPHeaders.cacheControl] = cacheControlHeader
+        const parsedMaxAge = parseMaxAge(cacheControlHeader)
+        cacheMaxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
       }
 
       // Alias for `event.waitUntil`
@@ -277,7 +276,7 @@ export const graphql: Handler = async function (req, res) {
             headers,
             body: originResult,
           },
-          maxAge,
+          cacheMaxAge,
         ),
       )
 

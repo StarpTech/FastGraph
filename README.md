@@ -58,7 +58,7 @@ Set the variables in your `wrangler.toml`.
 - **PRIVATE_TYPES**: The GraphQL types that indicates a private response (_Default:_ `""`, _Example:_ `"User,Profile"`)
 - **AUTH_DIRECTIVE**: The GraphQL directive on object or field definition that marks the request as private (_Default:_ `"auth"`)
 - **SCOPE**: The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
-- **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be ignored? (_Default:_ `""`, _Options:_ `"","1"`)
+- **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be ignored? (_Default:_ `"1"`, _Options:_ `"","1"`)
 
 ## Example
 

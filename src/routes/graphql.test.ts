@@ -27,6 +27,9 @@ const simpleHero = readFileSync(
 test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
+    // @ts-ignore
+    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
     })
@@ -123,6 +126,9 @@ test.serial(
 test.serial(
   'Should handle the request in scope AUTHENTICATED when "auth" directive was found',
   async (t) => {
+    // @ts-ignore
+    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
     })
@@ -226,6 +232,9 @@ test.serial(
 )
 
 test.serial('Should not cache mutations and proxy them through', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
   const { store: queryStore, metadata } = NewKVNamespace({
     name: 'QUERY_CACHE',
   })
@@ -277,7 +286,85 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   })
 })
 
-test.serial('Should respect max-age directive from origin', async (t) => {
+test.serial('Should pass cache-control header as it is', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
+  const { store: queryStore, metadata } = NewKVNamespace({
+    name: 'QUERY_CACHE',
+  })
+
+  let req = WorktopRequest('POST', {
+    query: simpleHero,
+  })
+  let res = WorktopResponse()
+
+  const originResponseJson = {
+    data: {
+      hero: {
+        name: 'R2-D2',
+      },
+    },
+  }
+  const originResponse = JSON.stringify(originResponseJson)
+
+  const m = mockFetch(originResponseJson, {
+    'content-type': 'application/json',
+    'cache-control': 'public, max-age=65',
+  }).mock()
+  t.teardown(() => m.revert())
+
+  await graphql(req, res)
+
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, originResponse)
+
+  let headers = Object.fromEntries(res.headers)
+  const kvEntries = getKVEntries(queryStore)
+  const metadataEntries = Object.fromEntries(metadata)
+
+  t.is(headers['cache-control'], 'public, max-age=65')
+
+  t.like(kvEntries, {
+    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
+      {
+        body: originResponseJson,
+        headers: {
+          [Headers.cacheControl]: 'public, max-age=65',
+          [Headers.fgCache]: CacheHitHeader.MISS,
+          [Headers.xCache]: CacheHitHeader.MISS,
+        },
+      },
+  })
+  t.deepEqual(metadataEntries, {
+    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
+      {
+        expirationTtl: 65,
+        metadata: {
+          createdAt: 1627670799330,
+          expirationTtl: 65,
+        },
+        toJSON: true,
+      },
+  })
+
+  await graphql(req, res)
+  t.is(res.statusCode, 200)
+
+  headers = Object.fromEntries(res.headers)
+
+  t.like(headers, {
+    [Headers.cacheControl]: 'public, max-age=65',
+    [Headers.age]: '0',
+    [Headers.fgCache]: CacheHitHeader.HIT,
+    [Headers.xCache]: CacheHitHeader.HIT,
+  })
+})
+
+test.serial('Should ignore cache-control from origin', async (t) => {
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
   const { store: queryStore, metadata } = NewKVNamespace({
     name: 'QUERY_CACHE',
   })
@@ -313,7 +400,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 
   t.is(
     headers['cache-control'],
-    'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
+    'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
   )
 
   t.like(kvEntries, {
@@ -322,7 +409,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
         body: originResponseJson,
         headers: {
           [Headers.cacheControl]:
-            'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
+            'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
           [Headers.fgCache]: CacheHitHeader.MISS,
           [Headers.xCache]: CacheHitHeader.MISS,
         },
@@ -331,10 +418,10 @@ test.serial('Should respect max-age directive from origin', async (t) => {
   t.deepEqual(metadataEntries, {
     'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
       {
-        expirationTtl: 65,
+        expirationTtl: 900,
         metadata: {
           createdAt: 1627670799330,
-          expirationTtl: 65,
+          expirationTtl: 900,
         },
         toJSON: true,
       },
@@ -347,7 +434,7 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 
   t.like(headers, {
     [Headers.cacheControl]:
-      'public, max-age=65, stale-if-error=60, stale-while-revalidate=900',
+      'public, max-age=900, stale-if-error=60, stale-while-revalidate=900',
     [Headers.age]: '0',
     [Headers.fgCache]: CacheHitHeader.HIT,
     [Headers.xCache]: CacheHitHeader.HIT,
@@ -357,6 +444,9 @@ test.serial('Should respect max-age directive from origin', async (t) => {
 test.serial(
   'Should fail when origin does not respond with proper json content-type',
   async (t) => {
+    // @ts-ignore
+    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+
     NewKVNamespace({
       name: 'QUERY_CACHE',
     })
