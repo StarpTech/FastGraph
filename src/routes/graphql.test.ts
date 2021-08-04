@@ -270,7 +270,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.like(headers, {
     [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
-    [Headers.cacheControl]: 'public, no-cache',
+    [Headers.cacheControl]: 'public, no-cache, no-store',
   })
 
   t.deepEqual(kvEntries, {})
@@ -284,7 +284,7 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.like(headers, {
     [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
-    [Headers.cacheControl]: 'public, no-cache',
+    [Headers.cacheControl]: 'public, no-cache, no-store',
   })
 })
 
@@ -475,7 +475,7 @@ test.serial(
     const headers = Object.fromEntries(res.headers)
 
     t.like(headers, {
-      [Headers.cacheControl]: 'public, no-cache',
+      [Headers.cacheControl]: 'public, no-cache, no-store',
     })
   },
 )

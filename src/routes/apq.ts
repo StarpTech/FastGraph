@@ -135,6 +135,8 @@ export const apq: Handler = async function (req, res) {
     headers: req.headers,
     method: 'POST',
   })
+
+  // don't cache origin errors
   if (!originResponse.ok) {
     return res.send(
       originResponse.status,
@@ -142,16 +144,17 @@ export const apq: Handler = async function (req, res) {
         error: `fetch error: ${originResponse.statusText}`,
       },
       {
-        [HTTPHeaders.cacheControl]: 'public, no-cache',
+        [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
       },
     )
   }
 
   let json = await originResponse.json()
 
+  // don't cache graphql errors
   if (json?.errors) {
     return res.send(500, json?.errors, {
-      [HTTPHeaders.cacheControl]: 'public, no-cache',
+      [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
     })
   }
 
