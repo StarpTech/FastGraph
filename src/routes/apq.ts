@@ -2,7 +2,7 @@ import type { Handler } from 'worktop'
 import { SHA256, timingSafeEqual } from 'worktop/crypto'
 import { encode } from 'worktop/utils'
 import { find, save } from '../stores/APQCache'
-import { Headers as HTTPHeaders } from '../utils'
+import { Headers as HTTPHeaders, Scope } from '../utils'
 import { GraphQLRequest } from './graphql'
 
 declare const APQ_TTL: string
@@ -39,6 +39,10 @@ export const apq: Handler = async function (req, res) {
     return res.send(400, 'Unsupported persisted query version')
   }
 
+  const headers: Record<string, string> = {
+    [HTTPHeaders.fgScope]: Scope.PUBLIC,
+  }
+
   const authorizationHeader = req.headers.get(HTTPHeaders.authorization)
 
   const cacheUrl = new URL(req.url)
@@ -46,6 +50,7 @@ export const apq: Handler = async function (req, res) {
 
   // append "authorization" value to query and make it part of the cache key
   if (authorizationHeader) {
+    headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
     cacheUrl.searchParams.append(
       HTTPHeaders.authorization,
       await SHA256(authorizationHeader),
@@ -164,12 +169,13 @@ export const apq: Handler = async function (req, res) {
   )
 
   let cacheMaxAge = APQ_TTL
-  const headers: Record<string, string> = {
-    [HTTPHeaders.cacheControl]: `public, max-age=${cacheMaxAge}, stale-if-error=${swr}, stale-while-revalidate=${swr}`,
-    [HTTPHeaders.contentType]: 'application/json',
-    [HTTPHeaders.fgOriginStatusCode]: originResponse.status.toString(),
-    [HTTPHeaders.fgOriginStatusText]: originResponse.statusText.toString(),
-  }
+
+  headers[
+    HTTPHeaders.cacheControl
+  ] = `public, max-age=${cacheMaxAge}, stale-if-error=${swr}, stale-while-revalidate=${swr}`
+  headers[HTTPHeaders.contentType] = 'application/json'
+  headers[HTTPHeaders.fgOriginStatusCode] = originResponse.status.toString()
+  headers[HTTPHeaders.fgOriginStatusText] = originResponse.statusText.toString()
 
   if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
     headers[HTTPHeaders.cacheControl] = cacheControlHeader

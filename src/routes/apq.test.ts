@@ -62,6 +62,7 @@ test.serial('Should return query result and store APQ', async (t) => {
     'content-type': 'application/json',
     'fastgraph-origin-status-code': '200',
     'fastgraph-origin-status-text': 'OK',
+    'fastgraph-scope': 'PUBLIC',
   })
 
   t.like(m.getArgs(), {
