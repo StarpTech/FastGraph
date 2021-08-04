@@ -14,7 +14,7 @@
 
 - Cache POST GraphQL queries
 - Works with [Apollo Cache Control Plugin](https://www.apollographql.com/docs/apollo-server/performance/caching)
-- Set appropriate cache headers `age`, `x-cache`, `cache-control` or respect origin header
+- Set appropriate cache headers `age`, `x-cache`, `cache-control` or respect your origin header
 - Cache authenticated data when specific GraphQL directive or types are used
 - Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
 - Transparent [APQ](https://www.apollographql.com/docs/apollo-server/performance/apq/) proxy with CDN [caching](https://developers.cloudflare.com/workers/runtime-apis/cache) capabilities.
