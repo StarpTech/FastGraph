@@ -34,6 +34,8 @@ We provide different features to work with authenticated data:
 
 In order to use option `2` and `3` you have to put your schema in the file `schema.graphql`. The schema is built and injected at build-time into the worker script. This is the only solution to provide good latency with increasing schema size. The schema size is limited to approximately `800KB` after normalization and compression. The worker script size is itself [limited](https://developers.cloudflare.com/workers/platform/limits) to `1MB` from cloudflare. If you want to update your schema you have to redeploy your worker. **Don't forget to validate your schema before you trigger the deployment.**
 
+> For `APQ` requests the _Authorization_ header is respected in the CDN [cache](https://developers.cloudflare.com/workers/runtime-apis/cache).
+
 ## Getting Started
 
 ```sh
