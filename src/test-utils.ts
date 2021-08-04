@@ -23,7 +23,15 @@ globalThis.APQ_TTL = '900'
 
 // @ts-ignore
 // worktop/cache
-globalThis.caches = { default: {} }
+globalThis.caches = {
+  // @ts-ignore
+  default: {
+    async put() {},
+    async match(requestInfo: RequestInfo, options?: CacheQueryOptions) {
+      return undefined
+    },
+  },
+}
 
 globalThis.crypto = {
   // @ts-ignore
@@ -50,6 +58,7 @@ globalThis.atob = (x) => Buffer.from(x, 'base64').toString()
 globalThis.ReadableStream = class ReadableStream {}
 
 export const Namespace = () => ({} as any)
+
 export const Mock = (x?: any) => {
   let args: any[],
     f = (...y: any[]) => ((args = y), Promise.resolve(x))
@@ -112,6 +121,7 @@ export const WorktopRequest = (
   headers: Headers = Headers(null),
 ): ServerRequest => {
   return {
+    url: 'http://fastgraph.de' + '?' + query.toString(),
     method,
     query,
     headers,
@@ -219,6 +229,27 @@ globalThis.fetch = async function Fetch(url: RequestInfo, init?: RequestInit) {
   }
 }
 
+// @ts-ignore - faking it
+globalThis.Request = function (input: RequestInfo, init: RequestInit = {}) {
+  var $ = this as any
+  if (typeof input === 'string') $.url = input
+  else Object.assign($, input)
+  Object.assign($, init)
+}
+
+// @ts-ignore - faking it
+globalThis.Response = function Response(
+  body: BodyInit,
+  init: ResponseInit = {},
+) {
+  var $ = this as any
+  $.headers = init.headers || new globalThis.Headers()
+  $.statusText = init.statusText || ''
+  $.status = init.status || 200
+  $.body = body || null
+  $.clone = () => 'cloned'
+}
+
 export const mockFetch = (
   json: any,
   headers: { [s: string]: any } = new globalThis.Headers(),
@@ -248,7 +279,7 @@ export const mockFetch = (
 
       return this
     },
-    getFetchArgs() {
+    getArgs() {
       return {
         input: fetchInput,
         init: fetchInit,

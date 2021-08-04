@@ -1,5 +1,4 @@
-import { Router, STATUS_CODES } from 'worktop'
-import { listen } from 'worktop/cache'
+import { Router, STATUS_CODES, listen } from 'worktop'
 import * as CORS from 'worktop/cors'
 import { apq } from './routes/apq'
 import { graphql } from './routes/graphql'

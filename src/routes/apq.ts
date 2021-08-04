@@ -39,6 +39,37 @@ export const apq: Handler = async function (req, res) {
     return res.send(400, 'Unsupported persisted query version')
   }
 
+  const authorizationHeader = req.headers.get(HTTPHeaders.authorization)
+
+  const cacheUrl = new URL(req.url)
+  let pathname = cacheUrl.pathname
+
+  // append "authorization" value to query and make it part of the cache key
+  if (authorizationHeader) {
+    cacheUrl.searchParams.append(
+      HTTPHeaders.authorization,
+      await SHA256(authorizationHeader),
+    )
+  }
+
+  // sort params to avoid cache fragmentation
+  cacheUrl.searchParams.sort()
+
+  cacheUrl.pathname = pathname
+
+  const cacheKey = new Request(cacheUrl.toString(), {
+    headers: req.headers,
+    method: 'GET',
+  })
+
+  const cache = caches.default
+
+  let response = await cache.match(cacheKey)
+
+  if (response) {
+    return response
+  }
+
   let query = req.query.get('query')
 
   const result = await find(persistedQuery.sha256Hash)
@@ -99,15 +130,11 @@ export const apq: Handler = async function (req, res) {
     body.variables = JSON.parse(variables)
   }
 
-  let originResponse: Response
-
-  originResponse = await fetch(originUrl, {
+  let originResponse = await fetch(originUrl, {
     body: JSON.stringify(body),
     headers: req.headers,
     method: 'POST',
   })
-  let json = await originResponse.json()
-
   if (!originResponse.ok) {
     return res.send(
       originResponse.status,
@@ -120,6 +147,8 @@ export const apq: Handler = async function (req, res) {
     )
   }
 
+  let json = await originResponse.json()
+
   if (json?.errors) {
     return res.send(500, json?.errors, {
       [HTTPHeaders.cacheControl]: 'public, no-cache',
@@ -127,7 +156,6 @@ export const apq: Handler = async function (req, res) {
   }
 
   const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
-
   const cacheControlHeader = originResponse.headers.get(
     HTTPHeaders.cacheControl,
   )
@@ -143,6 +171,21 @@ export const apq: Handler = async function (req, res) {
   if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
     headers[HTTPHeaders.cacheControl] = cacheControlHeader
   }
+
+  // Alias for `event.waitUntil`
+  // ~> queues background task (does NOT delay response)
+  req.extend(
+    cache.put(
+      cacheKey,
+      new Response(json, {
+        status: originResponse.status,
+        statusText: originResponse.statusText,
+        headers: {
+          ...headers,
+        },
+      }),
+    ),
+  )
 
   return res.send(200, json, headers)
 }

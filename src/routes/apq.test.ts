@@ -1,6 +1,8 @@
 import test from 'ava'
+import { log } from 'lzutf8'
 import {
   getKVEntries,
+  Mock,
   mockFetch,
   NewKVNamespace,
   WorktopRequest,
@@ -9,9 +11,14 @@ import {
 import { Headers } from '../utils'
 import { apq } from './apq'
 
+const Cache = (caches as any).default
+
 test.serial('Should return query result and store APQ', async (t) => {
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+
+  Cache.match = Mock()
+  Cache.put = Mock()
 
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
@@ -40,7 +47,25 @@ test.serial('Should return query result and store APQ', async (t) => {
 
   await apq(req, res)
 
-  t.like(m.getFetchArgs(), {
+  const putRequest = Cache.put.args()[0]
+
+  t.is(
+    putRequest.url,
+    'http://fastgraph.de/?extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38%22%7D%7D&query=%7B__typename%7D',
+  )
+
+  const putResponse = Cache.put.args()[1]
+
+  t.is(putResponse.body, '{"data":{"droid":{"id":123}}}')
+  t.deepEqual(putResponse.headers, {
+    'cache-control':
+      'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
+    'content-type': 'application/json',
+    'fastgraph-origin-status-code': '200',
+    'fastgraph-origin-status-text': 'OK',
+  })
+
+  t.like(m.getArgs(), {
     input: 'https://grapql-endpoint/',
     init: {
       method: 'POST',
@@ -106,7 +131,7 @@ test.serial(
 
     await apq(req, res)
 
-    t.like(m.getFetchArgs(), {
+    t.like(m.getArgs(), {
       input: 'https://grapql-endpoint/',
       init: {
         method: 'POST',
