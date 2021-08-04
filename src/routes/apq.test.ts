@@ -1,5 +1,4 @@
 import test from 'ava'
-import { log } from 'lzutf8'
 import {
   getKVEntries,
   Mock,
