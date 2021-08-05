@@ -6,6 +6,9 @@ export enum Headers {
   fgOriginIgnoreCacheHeaders = 'fastgraph-origin-ignore-cache-headers',
   fgScope = 'fastgraph-scope',
 
+  //cf
+  cfCacheTag = 'cache-tag',
+
   // Common
   setCookie = 'set-cookie',
   contentType = 'content-type',

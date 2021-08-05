@@ -29,6 +29,8 @@ test.serial(
   async (t) => {
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+    // @ts-ignore
+    globalThis.AUTH_DIRECTIVE = 'auth'
 
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
@@ -128,6 +130,8 @@ test.serial(
   async (t) => {
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+    // @ts-ignore
+    globalThis.AUTH_DIRECTIVE = 'auth'
 
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
@@ -291,6 +295,8 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
 test.serial('Should pass cache-control header as it is', async (t) => {
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+  // @ts-ignore
+  globalThis.AUTH_DIRECTIVE = 'auth'
 
   const { store: queryStore, metadata } = NewKVNamespace({
     name: 'QUERY_CACHE',
@@ -366,6 +372,8 @@ test.serial('Should pass cache-control header as it is', async (t) => {
 test.serial('Should ignore cache-control from origin', async (t) => {
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
+  // @ts-ignore
+  globalThis.AUTH_DIRECTIVE = 'auth'
 
   const { store: queryStore, metadata } = NewKVNamespace({
     name: 'QUERY_CACHE',

@@ -177,6 +177,15 @@ export const apq: Handler = async function (req, res) {
   headers[HTTPHeaders.fgOriginStatusCode] = originResponse.status.toString()
   headers[HTTPHeaders.fgOriginStatusText] = originResponse.statusText.toString()
 
+  const cacheTags = [persistedQuery.sha256Hash]
+
+  // You can purge your cache by tags
+  // This is only evaluated on enterprise plan and the header is never visible for customers
+  if (operationName) {
+    cacheTags.push(operationName)
+  }
+  headers[HTTPHeaders.cfCacheTag] = cacheTags.join(',')
+
   if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
     headers[HTTPHeaders.cacheControl] = cacheControlHeader
   }

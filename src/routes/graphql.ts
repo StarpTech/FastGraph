@@ -34,7 +34,6 @@ const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
 const scope: Scope = SCOPE as Scope
-const authDirectiveName = AUTH_DIRECTIVE
 
 /**
  * Only one Workers instance runs on each of the many global Cloudflare edge servers.
@@ -93,11 +92,14 @@ export const graphql: Handler = async function (req, res) {
   let isMutationRequest = false
   let authRequired = false
   let content = originalBody.query
+  let inspectSchema = AUTH_DIRECTIVE || privateTypes
 
   // only for testing
-  if (process.env.NODE_ENV === 'test' && originalBody.schema) {
-    schema = buildGraphQLSchema(originalBody.schema)
-  } else if (!schema && schemaString) {
+  if (process.env.NODE_ENV === 'test') {
+    if (inspectSchema && originalBody.schema) {
+      schema = buildGraphQLSchema(originalBody.schema)
+    }
+  } else if (inspectSchema && schemaString && !schema) {
     schema = buildGraphQLSchema(schemaString)
   }
 
@@ -105,23 +107,17 @@ export const graphql: Handler = async function (req, res) {
     queryDocumentNode = parse(originalBody.query, { noLocation: true })
     isMutationRequest = isMutation(queryDocumentNode)
 
-    if (!isMutationRequest) {
-      if (authDirectiveName || privateTypes) {
-        if (schema) {
-          if (authDirectiveName) {
-            authRequired = requiresAuth(
-              authDirectiveName,
-              schema,
-              queryDocumentNode,
-            )
-          }
-          if (privateTypes) {
-            hasPrivateTypes = hasIntersectedTypes(
-              schema,
-              queryDocumentNode,
-              privateTypes,
-            )
-          }
+    if (!isMutationRequest && inspectSchema) {
+      if (schema) {
+        if (AUTH_DIRECTIVE) {
+          authRequired = requiresAuth(AUTH_DIRECTIVE, schema, queryDocumentNode)
+        }
+        if (privateTypes) {
+          hasPrivateTypes = hasIntersectedTypes(
+            schema,
+            queryDocumentNode,
+            privateTypes,
+          )
         }
       }
 

@@ -36,6 +36,27 @@ In order to use option `2` and `3` you have to put your schema in the file `sche
 
 > For `APQ` requests the _Authorization_ header is respected in the CDN [cache](https://developers.cloudflare.com/workers/runtime-apis/cache).
 
+## Cache invalidation
+
+### POST requests
+
+Use [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair) to invalidate specific queries in the KV storage.
+
+```sh
+# list all entries and make it compatible to bulk delete command
+wrangler kv:key list --binding=QUERY_CACHE | jq '[.[] | .["key"] = .name | .["value"] = "" | del(.name, .expiration)]' > allthethingsdelete.json
+# all
+wrangler kv:bulk delete --binding=QUERY_CACHE allthethingsdelete.json
+# by key
+jq '.[] | select(.key == "$KEY")' allthethingsdelete.json > allthethingsdelete.json
+```
+
+### APQ
+
+You can purge by Cache-Tags, Host or Prefix. This feature is only available for the cloudflare enterprise plan. We tagging the `operationName` and `sha256Hash`.
+
+https://api.cloudflare.com/#zone-purge-files-by-cache-tags,-host-or-prefix
+
 ## Getting Started
 
 ```sh
@@ -58,7 +79,7 @@ Set the variables in your `wrangler.toml`.
 - **APQ_TTL**: The default TTL (minimum 60s) of AQP queries (_Default:_ `900`)
 - **SWR**: The default value for the `stale-while-revalidate` cache directive (_Default:_ `900`)
 - **PRIVATE_TYPES**: The GraphQL types that indicates a private response (_Default:_ `""`, _Example:_ `"User,Profile"`)
-- **AUTH_DIRECTIVE**: The GraphQL directive on object or field definition that marks the request as private (_Default:_ `"auth"`)
+- **AUTH_DIRECTIVE**: The GraphQL directive on object or field definition that marks the request as private (_Default:_ `""`)
 - **SCOPE**: The default cache scope. Use `AUTHENTICATED` to enforce per-user cache based on `Authorization` header. (_Default:_ `"PUBLIC"`, _Options:_ `"PUBLIC","AUTHENTICATED"`)
 - **IGNORE_ORIGIN_CACHE_HEADERS**: Should the origin `cache-control` headers be ignored? (_Default:_ `"1"`, _Options:_ `"","1"`)
 
