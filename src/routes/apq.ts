@@ -43,33 +43,35 @@ export const apq: Handler = async function (req, res) {
     [HTTPHeaders.fgScope]: Scope.PUBLIC,
   }
 
+  const operationName = req.query.get('operationName')
   const authorizationHeader = req.headers.get(HTTPHeaders.authorization)
 
   const cacheUrl = new URL(req.url)
-  let pathname = cacheUrl.pathname
+  let cacheKey = ''
+
+  if (operationName) {
+    cacheKey += operationName
+  }
 
   // append "authorization" value to query and make it part of the cache key
   if (authorizationHeader) {
     headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
-    cacheUrl.searchParams.append(
-      HTTPHeaders.authorization,
-      await SHA256(authorizationHeader),
-    )
+    cacheKey += '/' + await SHA256(authorizationHeader)
   }
 
-  // sort params to avoid cache fragmentation
-  cacheUrl.searchParams.sort()
+  cacheUrl.pathname = cacheUrl.pathname + cacheKey
 
-  cacheUrl.pathname = pathname
 
-  const cacheKey = new Request(cacheUrl.toString(), {
+  
+
+  const cacheRequest = new Request(cacheUrl.toString(), {
     headers: req.headers,
     method: 'GET',
   })
 
   const cache = caches.default
 
-  let response = await cache.match(cacheKey)
+  let response = await cache.match(cacheRequest)
 
   if (response) {
     return response
@@ -127,7 +129,6 @@ export const apq: Handler = async function (req, res) {
   const q = query!
   const body: GraphQLRequest = { query: q }
 
-  let operationName = req.query.get('operationName')
   if (operationName) {
     body.operationName = operationName
   }
@@ -194,7 +195,7 @@ export const apq: Handler = async function (req, res) {
   // ~> queues background task (does NOT delay response)
   req.extend(
     cache.put(
-      cacheKey,
+      cacheRequest,
       new Response(json, {
         status: originResponse.status,
         statusText: originResponse.statusText,
