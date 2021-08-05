@@ -56,13 +56,10 @@ export const apq: Handler = async function (req, res) {
   // append "authorization" value to query and make it part of the cache key
   if (authorizationHeader) {
     headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
-    cacheKey += '/' + await SHA256(authorizationHeader)
+    cacheKey += operationName ? '/' : '' + (await SHA256(authorizationHeader))
   }
 
   cacheUrl.pathname = cacheUrl.pathname + cacheKey
-
-
-  
 
   const cacheRequest = new Request(cacheUrl.toString(), {
     headers: req.headers,
