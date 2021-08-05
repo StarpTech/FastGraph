@@ -15,8 +15,6 @@ globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
 // @ts-ignore
 globalThis.AUTH_DIRECTIVE = ''
 // @ts-ignore
-globalThis.SCHEMA_STRING = ''
-// @ts-ignore
 globalThis.SWR = '900'
 // @ts-ignore
 globalThis.APQ_TTL = '900'

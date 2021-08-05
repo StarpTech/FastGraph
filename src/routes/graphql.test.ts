@@ -1,5 +1,6 @@
 import test from 'ava'
 import { readFileSync } from 'fs'
+import { key } from '../stores/Schema'
 import {
   getKVEntries,
   mockFetch,
@@ -30,7 +31,7 @@ test.serial(
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
     // @ts-ignore
-    globalThis.AUTH_DIRECTIVE = 'auth'
+    globalThis.AUTH_DIRECTIVE = ''
 
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
@@ -88,7 +89,7 @@ test.serial(
     })
 
     t.deepEqual(kvEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+      'query-cache::ea45ea2a5de15f5a5909227ab2782e8743e9b2fa8ccab40961e6b7a0c790ed85':
         {
           body: originResponseJson,
           headers: {
@@ -99,7 +100,7 @@ test.serial(
         },
     })
     t.deepEqual(metadataEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
+      'query-cache::ea45ea2a5de15f5a5909227ab2782e8743e9b2fa8ccab40961e6b7a0c790ed85':
         {
           expirationTtl: 900,
           metadata: {
@@ -133,12 +134,15 @@ test.serial(
     // @ts-ignore
     globalThis.AUTH_DIRECTIVE = 'auth'
 
+    const { store: schemaStore } = NewKVNamespace({
+      name: 'SCHEMA',
+    })
+    schemaStore.set(key, testSchema)
     const { store: queryStore, metadata } = NewKVNamespace({
       name: 'QUERY_CACHE',
     })
 
     let req = WorktopRequest('POST', {
-      schema: testSchema,
       query: droidWithArg,
     })
     let res = WorktopResponse()

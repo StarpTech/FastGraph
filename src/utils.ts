@@ -5,6 +5,7 @@ export enum Headers {
   fgOriginStatusText = 'fastgraph-origin-status-text',
   fgOriginIgnoreCacheHeaders = 'fastgraph-origin-ignore-cache-headers',
   fgScope = 'fastgraph-scope',
+  fgInspected = 'fastgraph-inspected',
 
   //cf
   cfCacheTag = 'cache-tag',

@@ -1,9 +1,5 @@
 const path = require('path')
-const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
-const { stripIgnoredCharacters } = require('graphql')
-const LZUTF8 = require('lzutf8')
-const { readFileSync } = require('fs')
 
 const mode = process.env.NODE_ENV || 'production'
 
@@ -12,19 +8,6 @@ module.exports = {
     filename: `worker.${mode}.js`,
     path: path.join(__dirname, 'dist'),
   },
-  plugins: [
-    new webpack.DefinePlugin({
-      SCHEMA_STRING: JSON.stringify(
-        LZUTF8.compress(
-          stripIgnoredCharacters(readFileSync('./schema.graphql', 'utf-8')),
-          { outputEncoding: 'StorageBinaryString' },
-        ),
-      ),
-      'process.env': {
-        NODE_ENV: JSON.stringify(mode),
-      },
-    }),
-  ],
   mode,
   optimization: {
     minimize: true,

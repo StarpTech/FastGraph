@@ -1,7 +1,6 @@
 import { Handler } from 'worktop'
 import { SHA256 } from 'worktop/crypto'
 import retry from 'async-retry'
-import LZUTF8 from 'lzutf8'
 import {
   normalizeDocument,
   isMutation,
@@ -16,7 +15,8 @@ import {
   parseMaxAge,
   Scope,
 } from '../utils'
-import { find, save } from '../stores/QueryCache'
+import { find as findQuery, save as saveQuery } from '../stores/QueryCache'
+import { find as findSchema } from '../stores/Schema'
 import { HTTPResponseError } from '../errors'
 import { GraphQLSchema, parse } from 'graphql'
 
@@ -27,7 +27,6 @@ declare const SCOPE: string
 declare const IGNORE_ORIGIN_CACHE_HEADERS: string
 declare const AUTH_DIRECTIVE: string
 declare const SWR: string
-declare const SCHEMA_STRING: string
 
 const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
@@ -45,17 +44,12 @@ const scope: Scope = SCOPE as Scope
  * This means that the graphql schema is cached for the second request on every edge server
  * but may be rebuild when the worker is exited due to memory limit.
  */
-let schemaString = LZUTF8.decompress(SCHEMA_STRING, {
-  inputEncoding: 'StorageBinaryString',
-})
-let schema: GraphQLSchema
+let graphQLSchema: GraphQLSchema
 
 export type GraphQLRequest = {
   query: string
   operationName?: string
   variables?: Record<string, any>
-  // only for testing
-  schema?: string
 }
 
 export const graphql: Handler = async function (req, res) {
@@ -92,29 +86,30 @@ export const graphql: Handler = async function (req, res) {
   let isMutationRequest = false
   let authRequired = false
   let content = originalBody.query
-  let inspectSchema = AUTH_DIRECTIVE || privateTypes
-
-  // only for testing
-  if (process.env.NODE_ENV === 'test') {
-    if (inspectSchema && originalBody.schema) {
-      schema = buildGraphQLSchema(originalBody.schema)
-    }
-  } else if (inspectSchema && schemaString && !schema) {
-    schema = buildGraphQLSchema(schemaString)
-  }
+  let inspectSchema = !!AUTH_DIRECTIVE || !!privateTypes
 
   try {
     queryDocumentNode = parse(originalBody.query, { noLocation: true })
     isMutationRequest = isMutation(queryDocumentNode)
 
     if (!isMutationRequest && inspectSchema) {
-      if (schema) {
+      const schema = await findSchema()
+      if (schema && !graphQLSchema) {
+        graphQLSchema = buildGraphQLSchema(schema)
+      }
+      
+      if (graphQLSchema) {
+        defaultResponseHeaders[HTTPHeaders.fgInspected] = 'true'
         if (AUTH_DIRECTIVE) {
-          authRequired = requiresAuth(AUTH_DIRECTIVE, schema, queryDocumentNode)
+          authRequired = requiresAuth(
+            AUTH_DIRECTIVE,
+            graphQLSchema,
+            queryDocumentNode,
+          )
         }
         if (privateTypes) {
           hasPrivateTypes = hasIntersectedTypes(
-            schema,
+            graphQLSchema,
             queryDocumentNode,
             privateTypes,
           )
@@ -154,7 +149,7 @@ export const graphql: Handler = async function (req, res) {
       querySignature = await SHA256(content)
     }
 
-    const { value, metadata } = await find(querySignature)
+    const { value, metadata } = await findQuery(querySignature)
 
     if (value) {
       const headers: Record<string, string> = {
@@ -272,7 +267,7 @@ export const graphql: Handler = async function (req, res) {
       // Alias for `event.waitUntil`
       // ~> queues background task (does NOT delay response)
       req.extend(
-        save(
+        saveQuery(
           querySignature,
           {
             headers,

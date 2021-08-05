@@ -32,7 +32,12 @@ We provide different features to work with authenticated data:
 2. `AUTH_DIRECTIVE=auth` The request is validated for the presence of the `auth` GraphQL directive. When matched the request is handled as scope `AUTHENTICATED`.
 3. `PRIVATE_TYPES=User,Profile` The request is validated for the presence of specific GraphQL types. When matched the request is handled as scope `AUTHENTICATED`.
 
-In order to use option `2` and `3` you have to put your schema in the file `schema.graphql`. The schema is built and injected at build-time into the worker script. This is the only solution to provide good latency with increasing schema size. The schema size is limited to approximately `800KB` after normalization and compression. The worker script size is itself [limited](https://developers.cloudflare.com/workers/platform/limits) to `1MB` from cloudflare. If you want to update your schema you have to redeploy your worker. **Don't forget to validate your schema before you trigger the deployment.**
+In order to use option `2` and `3` you have to push your schema to cloudflare. The latency will increase with the schema size on the first request against every new V8 isolate instance (cloudworker primitive).
+
+```sh
+wrangler kv:key put --binding=SCHEMA "schema::latest" --path "$YOUR_SCHEMA_FILE"
+```
+> Don't forget to validate your schema before you trigger the deployment.
 
 > For `APQ` requests the _Authorization_ header is respected in the CDN [cache](https://developers.cloudflare.com/workers/runtime-apis/cache).
 
