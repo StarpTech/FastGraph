@@ -143,16 +143,17 @@ export const graphql: Handler = async function (req, res) {
    *  is cached user specific based on the Authorization header
    */
   let querySignature = ''
-  if (isPrivateAndCacheable) {
-    querySignature = await SHA256(authHeader + content)
-  } else if (isMutationRequest === false) {
-    querySignature = await SHA256(content)
-  }
 
   /**
    * Check if query is in the cache
    */
   if (isMutationRequest === false) {
+    if (isPrivateAndCacheable) {
+      querySignature = await SHA256(authHeader + content)
+    } else if (isMutationRequest === false) {
+      querySignature = await SHA256(content)
+    }
+
     const { value, metadata } = await find(querySignature)
 
     if (value) {

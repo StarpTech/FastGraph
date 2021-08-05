@@ -122,12 +122,12 @@ export const apq: Handler = async function (req, res) {
     }
   }
 
-  let operationName = req.query.get('operationName')
   let variables = req.query.get('variables')
 
   const q = query!
   const body: GraphQLRequest = { query: q }
 
+  let operationName = req.query.get('operationName')
   if (operationName) {
     body.operationName = operationName
   }
