@@ -37,6 +37,7 @@ In order to use option `2` and `3` you have to push your schema to cloudflare. T
 ```sh
 wrangler kv:key put --binding=SCHEMA "schema::latest" --path "$YOUR_SCHEMA_FILE"
 ```
+
 > Don't forget to validate your schema before you push it!
 
 > For `APQ` requests the _Authorization_ header is respected in the CDN [cache](https://developers.cloudflare.com/workers/runtime-apis/cache).

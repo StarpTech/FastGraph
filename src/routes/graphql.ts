@@ -92,31 +92,33 @@ export const graphql: Handler = async function (req, res) {
     queryDocumentNode = parse(originalBody.query, { noLocation: true })
     isMutationRequest = isMutation(queryDocumentNode)
 
-    if (!isMutationRequest && inspectSchema) {
-      const schema = await findSchema()
-      if (schema && !graphQLSchema) {
-        graphQLSchema = buildGraphQLSchema(schema)
-      }
-      
-      if (graphQLSchema) {
-        defaultResponseHeaders[HTTPHeaders.fgInspected] = 'true'
-        if (AUTH_DIRECTIVE) {
-          authRequired = requiresAuth(
-            AUTH_DIRECTIVE,
-            graphQLSchema,
-            queryDocumentNode,
-          )
-        }
-        if (privateTypes) {
-          hasPrivateTypes = hasIntersectedTypes(
-            graphQLSchema,
-            queryDocumentNode,
-            privateTypes,
-          )
-        }
-      }
-
+    if (!isMutationRequest) {
       content = normalizeDocument(originalBody.query)
+
+      if (inspectSchema) {
+        const schema = await findSchema()
+        if (schema && !graphQLSchema) {
+          graphQLSchema = buildGraphQLSchema(schema)
+        }
+
+        if (graphQLSchema) {
+          defaultResponseHeaders[HTTPHeaders.fgInspected] = 'true'
+          if (AUTH_DIRECTIVE) {
+            authRequired = requiresAuth(
+              AUTH_DIRECTIVE,
+              graphQLSchema,
+              queryDocumentNode,
+            )
+          }
+          if (privateTypes) {
+            hasPrivateTypes = hasIntersectedTypes(
+              graphQLSchema,
+              queryDocumentNode,
+              privateTypes,
+            )
+          }
+        }
+      }
     }
   } catch (error) {
     console.error(error)

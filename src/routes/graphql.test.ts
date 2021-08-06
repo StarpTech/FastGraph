@@ -89,7 +89,7 @@ test.serial(
     })
 
     t.deepEqual(kvEntries, {
-      'query-cache::ea45ea2a5de15f5a5909227ab2782e8743e9b2fa8ccab40961e6b7a0c790ed85':
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
         {
           body: originResponseJson,
           headers: {
@@ -100,7 +100,7 @@ test.serial(
         },
     })
     t.deepEqual(metadataEntries, {
-      'query-cache::ea45ea2a5de15f5a5909227ab2782e8743e9b2fa8ccab40961e6b7a0c790ed85':
+      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
         {
           expirationTtl: 900,
           metadata: {
