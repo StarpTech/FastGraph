@@ -43,10 +43,11 @@ wrangler kv:key put --binding=SCHEMA "schema::latest" --path "$YOUR_SCHEMA_FILE"
 
 ## Cache invalidation
 
-By default you can purge by a single key. This is not practical because we work with hashes. You need to upgrade your plan to the enterprise level in order to purge by
+With basic plan you can purge all or only by a single key. This is not practical because we work with hashes. You would need to upgrade your plan in order to purge by
 by Cache-Tags, Host or Prefix.
 
 - POST requests
+
   - Tags: `operationName` and `sha256Hash`
   - URL: `${pathname}/${operationName}/${queryHash + authHeader}`
 
