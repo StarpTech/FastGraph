@@ -8,6 +8,14 @@ import {
 import { readFileSync } from 'fs'
 
 const testSchema = readFileSync('./testdata/star_wars.graphql', 'utf8')
+const heroWithFragment = readFileSync(
+  './testdata/queries/hero_with_fragment.graphql',
+  'utf8',
+)
+const heroWithInlineFragment = readFileSync(
+  './testdata/queries/hero_with_inline_fragment.graphql',
+  'utf8',
+)
 const droidWithArg = readFileSync(
   './testdata/queries/droid_with_arg.graphql',
   'utf8',
@@ -22,14 +30,39 @@ test('extractTypes', async (t) => {
   t.deepEqual([...ids], ['Droid'])
 })
 
-test('requiresAuth', async (t) => {
+test('requiresAuth - Should require authentication, using simple field', async (t) => {
   let requires = requiresAuth(
     'auth',
     buildSchema(testSchema),
     parse(droidWithArg),
   )
   t.true(requires)
-  requires = requiresAuth('auth', buildSchema(testSchema), parse(simpleHero))
+})
+
+test('requiresAuth - Should require authentication, using fragments', async (t) => {
+  const requires = requiresAuth(
+    'auth',
+    buildSchema(testSchema),
+    parse(heroWithFragment),
+  )
+  t.true(requires)
+})
+
+test.only('requiresAuth - Should require authentication, using inline fragments', async (t) => {
+  const requires = requiresAuth(
+    'auth',
+    buildSchema(testSchema),
+    parse(heroWithInlineFragment),
+  )
+  t.true(requires)
+})
+
+test('requiresAuth - Should not require authentication', async (t) => {
+  const requires = requiresAuth(
+    'auth',
+    buildSchema(testSchema),
+    parse(simpleHero),
+  )
   t.false(requires)
 })
 

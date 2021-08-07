@@ -1,0 +1,11 @@
+{
+    hero {
+        ...fields
+    }
+}
+
+fragment fields on Hero {
+  friends {
+    name
+  }
+}

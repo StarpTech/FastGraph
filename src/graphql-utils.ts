@@ -10,6 +10,10 @@ import {
   getNamedType,
   BREAK,
   buildSchema,
+  FieldDefinitionNode,
+  ObjectTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  UnionTypeDefinitionNode,
 } from 'graphql'
 import { Headers as HTTPHeaders } from './utils'
 
@@ -73,30 +77,57 @@ export async function fetchSchema(
   }
 }
 
+export const hasAuthDirective = (
+  node:
+    | FieldDefinitionNode
+    | ObjectTypeDefinitionNode
+    | InterfaceTypeDefinitionNode
+    | UnionTypeDefinitionNode
+    | null
+    | undefined,
+  directiveName: string,
+) => {
+  return !!node?.directives?.some((d) => d.name.value === directiveName)
+}
+
 export function requiresAuth(
   directiveName: string,
   schema: GraphQLSchema,
   ast: DocumentNode,
 ): boolean {
   const typeInfo = new TypeInfo(schema)
-  let hasAuthDirective = false
+  let result = false
 
   visit(
     ast,
     visitWithTypeInfo(typeInfo, {
-      Field() {
-        const field = typeInfo.getFieldDef()
-        if (field) {
-          hasAuthDirective = !!field.astNode?.directives?.some(
-            (d) => d.name.value === directiveName,
-          )
-          return BREAK
+      enter(node) {
+        if (node.kind === 'FragmentSpread' || node.kind === 'InlineFragment') {
+          const type = typeInfo.getParentType()
+          if (type) {
+            if (
+              type.astNode?.kind === 'InterfaceTypeDefinition' ||
+              type.astNode?.kind === 'ObjectTypeDefinition'
+            ) {
+              result = !!type.astNode?.fields?.some((field) =>
+                hasAuthDirective(field, directiveName),
+              )
+            } else {
+              result = hasAuthDirective(type.astNode, directiveName)
+            }
+          }
+        } else if (node.kind === 'Field') {
+          const field = typeInfo.getFieldDef()
+          if (field) {
+            result = hasAuthDirective(field.astNode, directiveName)
+          }
         }
+        if (result) return BREAK
       },
     }),
   )
 
-  return hasAuthDirective
+  return result
 }
 
 export const buildGraphQLSchema = (schema: string) => {

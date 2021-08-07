@@ -40,8 +40,8 @@ enum Episode {
 }
 
 interface Character {
-    name: String!
-    friends: [Character]
+    name: String! 
+    friends: [Character] @auth
 }
 
 type Human implements Character {
