@@ -184,12 +184,19 @@ export const graphql: Handler = async function (req, res) {
   let originResponse = null
 
   try {
+    const forwardedHeaders = new Headers()
+    forwardedHeaders.append(HTTPHeaders.contentType, 'application/json')
+  
+    if (authorizationHeader) {
+      forwardedHeaders.append(HTTPHeaders.authorization, authorizationHeader)
+    }
+
     const body = JSON.stringify(originalBody)
     originResponse = await retry(
       async () => {
         const resp = await fetch(originUrl, {
           body,
-          headers: req.headers,
+          headers: forwardedHeaders,
           method: req.method,
         })
 
@@ -216,7 +223,8 @@ export const graphql: Handler = async function (req, res) {
       return res.send(
         500,
         {
-          error: 'Origin error',
+          name: 'OriginError',
+          error: 'Could not call origin',
         },
         {
           ...defaultResponseHeaders,
@@ -332,6 +340,7 @@ export const graphql: Handler = async function (req, res) {
   return res.send(
     415,
     {
+      name: 'UnsupportedOriginContentType',
       error: `Unsupported content-type "${contentType}" from origin "${originUrl}".`,
     },
     {

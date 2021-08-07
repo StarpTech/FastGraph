@@ -382,7 +382,7 @@ test.serial(
     t.is(res.statusCode, 415)
     t.deepEqual(
       res.body,
-      '{"error":"Unsupported content-type \\"text/html\\" from origin \\"https://grapql-endpoint/\\"."}',
+      '{"name":"UnsupportedOriginContentType","error":"Unsupported content-type \\"text/html\\" from origin \\"https://grapql-endpoint/\\"."}',
     )
 
     const headers = Object.fromEntries(res.headers)

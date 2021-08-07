@@ -388,5 +388,5 @@ test.serial('Should error when invalid APQ version is used', async (t) => {
   await apq(req, res)
 
   t.is(res.statusCode, 400)
-  t.deepEqual(res.body, '"Unsupported persisted query version"')
+  t.deepEqual(res.body, '{"name":"APQValidation","error":"Unsupported persisted query version"}')
 })

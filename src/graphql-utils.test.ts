@@ -48,7 +48,7 @@ test('requiresAuth - Should require authentication, using fragments', async (t) 
   t.true(requires)
 })
 
-test.only('requiresAuth - Should require authentication, using inline fragments', async (t) => {
+test('requiresAuth - Should require authentication, using inline fragments', async (t) => {
   const requires = requiresAuth(
     'auth',
     buildSchema(testSchema),

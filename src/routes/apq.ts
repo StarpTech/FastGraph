@@ -29,6 +29,7 @@ export const apq: Handler = async function (req, res) {
 
   if (!extensionsRawJson) {
     return res.send(400, {
+      name: 'APQValidation',
       error: 'Invalid APQ request',
     })
   }
@@ -36,7 +37,10 @@ export const apq: Handler = async function (req, res) {
   const { persistedQuery } = JSON.parse(extensionsRawJson) as APQExtensions
 
   if (persistedQuery.version !== 1) {
-    return res.send(400, 'Unsupported persisted query version')
+    return res.send(400, {
+      name: 'APQValidation',
+      error: 'Unsupported persisted query version',
+    })
   }
 
   const headers: Record<string, string> = {
@@ -77,6 +81,7 @@ export const apq: Handler = async function (req, res) {
   let query = req.query.get('query')
 
   const result = await find(persistedQuery.sha256Hash)
+
   if (result) {
     query = result.query
   }
@@ -133,9 +138,16 @@ export const apq: Handler = async function (req, res) {
     body.variables = JSON.parse(variables)
   }
 
+  const forwardedHeaders = new Headers()
+  forwardedHeaders.append(HTTPHeaders.contentType, 'application/json')
+
+  if (authorizationHeader) {
+    forwardedHeaders.append(HTTPHeaders.authorization, authorizationHeader)
+  }
+
   let originResponse = await fetch(originUrl, {
     body: JSON.stringify(body),
-    headers: req.headers,
+    headers: forwardedHeaders,
     method: 'POST',
   })
 
@@ -144,6 +156,7 @@ export const apq: Handler = async function (req, res) {
     return res.send(
       originResponse.status,
       {
+        name: 'OriginError',
         error: `fetch error: ${originResponse.statusText}`,
       },
       {
@@ -156,9 +169,16 @@ export const apq: Handler = async function (req, res) {
 
   // don't cache graphql errors
   if (json?.errors) {
-    return res.send(500, json?.errors, {
-      [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
-    })
+    return res.send(
+      500,
+      {
+        name: 'GraphQLError',
+        errors: json?.errors,
+      },
+      {
+        [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
+      },
+    )
   }
 
   const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
