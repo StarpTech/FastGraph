@@ -193,7 +193,7 @@ export const apq: Handler = async function (req, res) {
   req.extend(
     cache.put(
       cacheRequest,
-      new Response(json, {
+      new Response(JSON.stringify(json), {
         status: originResponse.status,
         statusText: originResponse.statusText,
         headers: {
