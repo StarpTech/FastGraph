@@ -12,6 +12,14 @@ import { apq } from './apq'
 
 const Cache = (caches as any).default
 
+test.beforeEach(() => {
+  Cache.clear()
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+  // @ts-ignore
+  globalThis.AUTH_DIRECTIVE = ''
+})
+
 test.serial('Should return query result and store APQ', async (t) => {
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
@@ -99,9 +107,6 @@ test.serial('Should return query result and store APQ', async (t) => {
 test.serial(
   'Should pass query variables and operationName to origin',
   async (t) => {
-    // @ts-ignore
-    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
-
     const { store } = NewKVNamespace({
       name: 'APQ_CACHE',
     })
@@ -160,9 +165,6 @@ test.serial(
 )
 
 test.serial('Should pass cache-control header as it is', async (t) => {
-  // @ts-ignore
-  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -261,9 +263,6 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 })
 
 test.serial('Should resolve query and make request to origin', async (t) => {
-  // @ts-ignore
-  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
-
   const { store } = NewKVNamespace({
     name: 'APQ_CACHE',
   })
@@ -361,9 +360,6 @@ test.serial('Should return error becasue APQ could not be found', async (t) => {
 })
 
 test.serial('Should error when invalid APQ version is used', async (t) => {
-  // @ts-ignore
-  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
-
   NewKVNamespace({
     name: 'APQ_CACHE',
   })

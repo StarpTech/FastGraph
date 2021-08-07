@@ -26,15 +26,17 @@ const simpleHero = readFileSync(
 
 const Cache = (caches as any).default
 
+test.beforeEach(() => {
+  Cache.clear()
+  // @ts-ignore
+  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
+  // @ts-ignore
+  globalThis.AUTH_DIRECTIVE = ''
+})
+
 test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
-    t.teardown(() => Cache.clear())
-    // @ts-ignore
-    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-    // @ts-ignore
-    globalThis.AUTH_DIRECTIVE = ''
-
     let req = WorktopRequest('POST', {
       operationName: 'foo',
       query: droidWithArg,
@@ -115,9 +117,6 @@ test.serial(
 test.serial(
   'Should handle the request in scope AUTHENTICATED when "auth" directive was found',
   async (t) => {
-    t.teardown(() => Cache.clear())
-    // @ts-ignore
-    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
     // @ts-ignore
     globalThis.AUTH_DIRECTIVE = 'auth'
 
@@ -190,7 +189,6 @@ test.serial(
 test.serial(
   'Should return 400 when "query" field is missing in body',
   async (t) => {
-    t.teardown(() => Cache.clear())
     let req = WorktopRequest('POST', {})
     let res = WorktopResponse()
 
@@ -203,10 +201,6 @@ test.serial(
 )
 
 test.serial('Should not cache mutations and proxy them through', async (t) => {
-  t.teardown(() => Cache.clear())
-  // @ts-ignore
-  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-
   let req = WorktopRequest('POST', {
     query: createReview,
   })
@@ -252,12 +246,6 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
 })
 
 test.serial('Should pass cache-control header as it is', async (t) => {
-  t.teardown(() => Cache.clear())
-  // @ts-ignore
-  globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-  // @ts-ignore
-  globalThis.AUTH_DIRECTIVE = ''
-
   let req = WorktopRequest('POST', {
     query: droidWithArg,
   })
@@ -304,7 +292,8 @@ test.serial('Should pass cache-control header as it is', async (t) => {
     t.like(Object.fromEntries(rawResp.headers), {
       [Headers.contentType]: 'application/json',
       [Headers.cacheControl]: 'public, max-age=60',
-      [Headers.cfCacheTag]: 'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,tag',
+      [Headers.cfCacheTag]:
+        'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,tag',
       [Headers.etag]: 'etag',
       [Headers.expires]: 'expires',
       [Headers.lastModified]: 'lastModified',
@@ -316,11 +305,8 @@ test.serial('Should pass cache-control header as it is', async (t) => {
 })
 
 test.serial('Should ignore cache-control from origin', async (t) => {
-  t.teardown(() => Cache.clear())
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
-  // @ts-ignore
-  globalThis.AUTH_DIRECTIVE = ''
 
   let req = WorktopRequest('POST', {
     query: simpleHero,
@@ -380,10 +366,6 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 test.serial(
   'Should fail when origin does not respond with proper json content-type',
   async (t) => {
-    t.teardown(() => Cache.clear())
-    // @ts-ignore
-    globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-
     let req = WorktopRequest('POST', {
       query: droidWithArg,
     })

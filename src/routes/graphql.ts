@@ -285,9 +285,9 @@ export const graphql: Handler = async function (req, res) {
       }
 
       if (cacheRequest) {
-        const cacheTags = [querySignature]
         // You can purge your cache by tags
         // This is only evaluated on enterprise plan and the header is never visible for customers
+        const cacheTags = [querySignature]
         if (originalBody.operationName) {
           cacheTags.push(originalBody.operationName)
         }
