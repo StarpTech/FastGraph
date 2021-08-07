@@ -19,16 +19,32 @@ globalThis.SWR = '900'
 // @ts-ignore
 globalThis.APQ_TTL = '900'
 
+export const mockCache = () => {
+  const store = new Map()
+  const cache = {
+    // @ts-ignore
+    match(req) {
+      return store.get(req.url)
+    },
+    // @ts-ignore
+    put(req, res) {
+      store.set(req.url, res)
+    },
+    clear() {
+      store.clear()
+    },
+    get store() {
+      return store
+    },
+  }
+  return cache
+}
+
 // @ts-ignore
 // worktop/cache
 globalThis.caches = {
   // @ts-ignore
-  default: {
-    async put() {},
-    async match(requestInfo: RequestInfo, options?: CacheQueryOptions) {
-      return undefined
-    },
-  },
+  default: mockCache(),
 }
 
 globalThis.crypto = {
@@ -241,10 +257,20 @@ globalThis.Response = function Response(
   init: ResponseInit = {},
 ) {
   var $ = this as any
-  $.headers = init.headers || new globalThis.Headers()
+  $.headers = new globalThis.Headers()
+  if (init.headers) {
+    if (!(init.headers instanceof globalThis.Headers)) {
+      $.headers = new globalThis.Headers(Object.entries(init.headers))
+    } else {
+      $.headers = init.headers
+    }
+  }
+
   $.statusText = init.statusText || ''
   $.status = init.status || 200
   $.body = body || null
+  // @ts-ignore
+  $.json = () => Promise.resolve(JSON.parse(body))
   $.clone = () => 'cloned'
 }
 

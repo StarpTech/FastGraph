@@ -12,10 +12,8 @@ import {
   Headers as HTTPHeaders,
   CacheHitHeader,
   isResponseCachable,
-  parseMaxAge,
   Scope,
 } from '../utils'
-import { find as findQuery, save as saveQuery } from '../stores/QueryCache'
 import { find as findSchema } from '../stores/Schema'
 import { HTTPResponseError } from '../errors'
 import { GraphQLSchema, parse } from 'graphql'
@@ -62,6 +60,7 @@ export const graphql: Handler = async function (req, res) {
   }
 
   const ignoreOriginCacheHeaders = IGNORE_ORIGIN_CACHE_HEADERS === '1'
+  const authorizationHeader = req.headers.get(HTTPHeaders.authorization) || ''
 
   const defaultResponseHeaders: Record<string, string> = {
     [HTTPHeaders.contentType]: 'application/json',
@@ -130,7 +129,6 @@ export const graphql: Handler = async function (req, res) {
     })
   }
 
-  const authHeader = req.headers.get(HTTPHeaders.authorization) || ''
   const isPrivateAndCacheable =
     isMutationRequest === false &&
     (hasPrivateTypes || scope === Scope.AUTHENTICATED || authRequired)
@@ -139,37 +137,44 @@ export const graphql: Handler = async function (req, res) {
    *  In case of the query will return user specific data the response
    *  is cached user specific based on the Authorization header
    */
+  const cache = caches.default
   let querySignature = ''
+  let cacheRequest: Request | null = null
 
   /**
    * Check if query is in the cache
    */
   if (isMutationRequest === false) {
+    let cacheKey = ''
+
     if (isPrivateAndCacheable) {
-      querySignature = await SHA256(authHeader + content)
-    } else if (isMutationRequest === false) {
+      querySignature = await SHA256(authorizationHeader + content)
+      defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
+    } else {
       querySignature = await SHA256(content)
     }
 
-    const { value, metadata } = await findQuery(querySignature)
+    const cacheUrl = new URL(req.url)
 
-    if (value) {
-      const headers: Record<string, string> = {
-        [HTTPHeaders.fgCache]: CacheHitHeader.HIT,
-        [HTTPHeaders.xCache]: CacheHitHeader.HIT,
-      }
-      if (metadata) {
-        const age = Math.round((Date.now() - metadata.createdAt) / 1000)
-        headers[HTTPHeaders.age] = (
-          age > metadata.expirationTtl ? metadata.expirationTtl : age
-        ).toString()
-      }
+    if (originalBody.operationName) {
+      cacheKey += originalBody.operationName + '/'
+    }
 
-      return res.send(200, value.body, {
-        ...defaultResponseHeaders,
-        ...value.headers,
-        ...headers,
-      })
+    cacheKey += querySignature
+
+    cacheUrl.pathname = cacheUrl.pathname + cacheKey
+
+    cacheRequest = new Request(cacheUrl.toString(), {
+      headers: req.headers,
+      method: 'GET',
+    })
+
+    const cache = caches.default
+
+    let response = await cache.match(cacheRequest)
+
+    if (response) {
+      return response
     }
   }
 
@@ -248,11 +253,6 @@ export const graphql: Handler = async function (req, res) {
         [HTTPHeaders.cacheControl]: `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`,
       }
 
-      const cacheControlHeader = originResponse.headers.get(
-        HTTPHeaders.cacheControl,
-      )
-      let cacheMaxAge = defaultMaxAgeInSeconds
-
       if (isPrivateAndCacheable) {
         headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
         headers[
@@ -260,24 +260,33 @@ export const graphql: Handler = async function (req, res) {
         ] = `private, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`
         headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
-      } else if (ignoreOriginCacheHeaders === false && cacheControlHeader) {
-        headers[HTTPHeaders.cacheControl] = cacheControlHeader
-        const parsedMaxAge = parseMaxAge(cacheControlHeader)
-        cacheMaxAge = parsedMaxAge > -1 ? parsedMaxAge : defaultMaxAgeInSeconds
+      } else if (ignoreOriginCacheHeaders === false) {
+        const cacheControlHeader = originResponse.headers.get(
+          HTTPHeaders.cacheControl,
+        )
+        if (cacheControlHeader) {
+          headers[HTTPHeaders.cacheControl] = cacheControlHeader
+        }
       }
 
-      // Alias for `event.waitUntil`
-      // ~> queues background task (does NOT delay response)
-      req.extend(
-        saveQuery(
-          querySignature,
-          {
-            headers,
-            body: originResult,
-          },
-          cacheMaxAge,
-        ),
-      )
+      if (cacheRequest) {
+        // Alias for `event.waitUntil`
+        // ~> queues background task (does NOT delay response)
+        req.extend(
+          cache.put(
+            cacheRequest,
+            new Response(JSON.stringify(originResult), {
+              status: originResponse.status,
+              statusText: originResponse.statusText,
+              headers: {
+                ...headers,
+                [HTTPHeaders.fgCache]: CacheHitHeader.HIT,
+                [HTTPHeaders.xCache]: CacheHitHeader.HIT,
+              },
+            }),
+          ),
+        )
+      }
 
       return res.send(200, originResult, headers)
     }

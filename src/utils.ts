@@ -15,7 +15,6 @@ export enum Headers {
   contentType = 'content-type',
   cacheControl = 'cache-control',
   date = 'date',
-  age = 'age',
   xCache = 'x-cache',
   authorization = 'authorization',
   vary = 'vary',
@@ -45,11 +44,6 @@ export enum CacheHitHeader {
   HIT = 'HIT',
   PASS = 'PASS',
   ERROR = 'ERROR',
-}
-
-export const parseMaxAge = (header: string): number => {
-  const matches = header.match(/max-age=(\d+)/)
-  return matches ? parseInt(matches[1]) : -1
 }
 
 export function isResponseCachable(res: Response): boolean {

@@ -18,7 +18,6 @@
 - Cache authenticated data when specific GraphQL directive or types are used
 - Cache can be invalidated programmatically with [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair)
 - Transparent [APQ](https://www.apollographql.com/docs/apollo-server/performance/apq/) proxy with CDN [caching](https://developers.cloudflare.com/workers/runtime-apis/cache) capabilities.
-- All benefits of [Cloudflare Workers](https://workers.cloudflare.com/) and [Cloudflare KV](https://www.cloudflare.com/products/workers-kv/)
 
 ## Caching semantics
 
@@ -44,24 +43,18 @@ wrangler kv:key put --binding=SCHEMA "schema::latest" --path "$YOUR_SCHEMA_FILE"
 
 ## Cache invalidation
 
-### POST requests
+By default you can purge by a single key. This is not practical because we work with hashes. You need to upgrade your plan to the enterprise level in order to purge by
+by Cache-Tags, Host or Prefix.
 
-Use [cli-wrangler](https://developers.cloudflare.com/workers/cli-wrangler) or [REST API](https://api.cloudflare.com/#workers-kv-namespace-delete-key-value-pair) to invalidate specific queries in the KV storage.
+- POST requests
+  - Tags: `operationName` and `sha256Hash`
+  - URL: `${pathname}/${operationName}/${queryHash + authHeader}`
 
-```sh
-# list all entries and make it compatible to bulk delete command
-wrangler kv:key list --binding=QUERY_CACHE | jq '[.[] | .["key"] = .name | .["value"] = "" | del(.name, .expiration)]' > allthethingsdelete.json
-# all
-wrangler kv:bulk delete --binding=QUERY_CACHE allthethingsdelete.json
-# by key
-jq '.[] | select(.key == "$KEY")' allthethingsdelete.json > allthethingsdelete.json
-```
+- AQP
+  - Tags: `operationName` and `sha256Hash`
+  - URL: `${pathname}/${operationName}/${queryHash + authHeader}`
 
-### APQ
-
-You can purge by Cache-Tags, Host or Prefix. This feature is only available for the cloudflare enterprise plan. We tagging the `operationName` and `sha256Hash`.
-
-https://api.cloudflare.com/#zone-purge-files-by-cache-tags,-host-or-prefix
+More info: https://api.cloudflare.com/#zone-purge-files-by-cache-tags,-host-or-prefix
 
 ## Getting Started
 

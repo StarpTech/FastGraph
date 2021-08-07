@@ -55,8 +55,8 @@ test.serial('Should return query result and store APQ', async (t) => {
 
   const putResponse = Cache.put.args()[1]
 
-  t.is(putResponse.body, '{"data":{"droid":{"id":123}}}')
-  t.deepEqual(putResponse.headers, {
+  t.is(putResponse.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
+  t.deepEqual(Object.fromEntries(putResponse.headers), {
     'cache-control':
       'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     'cache-tag':
@@ -75,9 +75,7 @@ test.serial('Should return query result and store APQ', async (t) => {
     },
   })
 
-  const headers = Object.fromEntries(res.headers)
-
-  t.like(headers, {
+  t.like(Object.fromEntries(res.headers), {
     [Headers.cacheControl]:
       'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
@@ -141,9 +139,7 @@ test.serial(
       },
     })
 
-    const headers = Object.fromEntries(res.headers)
-
-    t.like(headers, {
+    t.like(Object.fromEntries(res.headers), {
       [Headers.cacheControl]:
         'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.contentType]: 'application/json',
@@ -154,9 +150,7 @@ test.serial(
     t.is(res.statusCode, 200)
     t.deepEqual(res.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
 
-    const kvEntries = getKVEntries(store)
-
-    t.deepEqual(kvEntries, {
+    t.deepEqual(getKVEntries(store), {
       'apq-cache::ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38':
         {
           query: '{__typename}',
@@ -197,9 +191,7 @@ test.serial('Should pass cache-control header as it is', async (t) => {
 
   await apq(req, res)
 
-  const headers = Object.fromEntries(res.headers)
-
-  t.like(headers, {
+  t.like(Object.fromEntries(res.headers), {
     [Headers.cacheControl]: 'public, max-age=65',
     [Headers.contentType]: 'application/json',
     [Headers.fgOriginStatusCode]: '200',
@@ -209,9 +201,7 @@ test.serial('Should pass cache-control header as it is', async (t) => {
   t.is(res.statusCode, 200)
   t.deepEqual(res.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
 
-  const kvEntries = getKVEntries(store)
-
-  t.deepEqual(kvEntries, {
+  t.deepEqual(getKVEntries(store), {
     'apq-cache::ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38':
       {
         query: '{__typename}',
@@ -251,9 +241,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
 
   await apq(req, res)
 
-  const headers = Object.fromEntries(res.headers)
-
-  t.like(headers, {
+  t.like(Object.fromEntries(res.headers), {
     [Headers.cacheControl]:
       'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
     [Headers.contentType]: 'application/json',
@@ -264,9 +252,7 @@ test.serial('Should ignore cache-control from origin', async (t) => {
   t.is(res.statusCode, 200)
   t.deepEqual(res.body, '"{\\"data\\":{\\"droid\\":{\\"id\\":123}}}"')
 
-  const kvEntries = getKVEntries(store)
-
-  t.deepEqual(kvEntries, {
+  t.deepEqual(getKVEntries(store), {
     'apq-cache::ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38':
       {
         query: '{__typename}',

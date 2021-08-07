@@ -25,17 +25,16 @@ const simpleHero = readFileSync(
   'utf8',
 )
 
+const Cache = (caches as any).default
+
 test.serial(
   'Should call origin and cache on subsequent requests',
   async (t) => {
+    t.teardown(() => Cache.clear())
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
     // @ts-ignore
     globalThis.AUTH_DIRECTIVE = ''
-
-    const { store: queryStore, metadata } = NewKVNamespace({
-      name: 'QUERY_CACHE',
-    })
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,
@@ -62,8 +61,6 @@ test.serial(
     t.deepEqual(res.body, originResponse)
 
     let headers = Object.fromEntries(res.headers)
-    const kvEntries = getKVEntries(queryStore)
-    const metadataEntries = Object.fromEntries(metadata)
 
     const fastGraphHeaders = {
       [Headers.cacheControl]:
@@ -88,47 +85,36 @@ test.serial(
       [Headers.xCache]: CacheHitHeader.MISS,
     })
 
-    t.deepEqual(kvEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
-        {
-          body: originResponseJson,
-          headers: {
-            ...fastGraphHeaders,
-            [Headers.fgCache]: CacheHitHeader.MISS,
-            [Headers.xCache]: CacheHitHeader.MISS,
+    const rawResp = await graphql(req, res)
+    t.truthy(rawResp)
+
+    if (rawResp) {
+      t.is(rawResp.status, 200)
+
+      headers = Object.fromEntries(rawResp.headers)
+
+      t.deepEqual(await rawResp.json(), {
+        data: {
+          droid: {
+            name: 'R2-D2',
           },
         },
-    })
-    t.deepEqual(metadataEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
-        {
-          expirationTtl: 900,
-          metadata: {
-            createdAt: 1627670799330,
-            expirationTtl: 900,
-          },
-          toJSON: true,
-        },
-    })
+      })
 
-    await graphql(req, res)
-    t.is(res.statusCode, 200)
-
-    headers = Object.fromEntries(res.headers)
-
-    t.deepEqual(headers, {
-      ...fastGraphHeaders,
-      [Headers.fgScope]: Scope.PUBLIC,
-      [Headers.age]: '0',
-      [Headers.fgCache]: CacheHitHeader.HIT,
-      [Headers.xCache]: CacheHitHeader.HIT,
-    })
+      t.deepEqual(headers, {
+        ...fastGraphHeaders,
+        [Headers.fgScope]: Scope.PUBLIC,
+        [Headers.fgCache]: CacheHitHeader.HIT,
+        [Headers.xCache]: CacheHitHeader.HIT,
+      })
+    }
   },
 )
 
 test.serial(
   'Should handle the request in scope AUTHENTICATED when "auth" directive was found',
   async (t) => {
+    t.teardown(() => Cache.clear())
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
     // @ts-ignore
@@ -138,9 +124,6 @@ test.serial(
       name: 'SCHEMA',
     })
     schemaStore.set(key, testSchema)
-    const { store: queryStore, metadata } = NewKVNamespace({
-      name: 'QUERY_CACHE',
-    })
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,
@@ -166,11 +149,7 @@ test.serial(
     t.is(res.statusCode, 200)
     t.deepEqual(res.body, originResponse)
 
-    let headers = Object.fromEntries(res.headers)
-    const kvEntries = getKVEntries(queryStore)
-    const metadataEntries = Object.fromEntries(metadata)
-
-    t.like(headers, {
+    t.like(Object.fromEntries(res.headers), {
       [Headers.fgScope]: Scope.AUTHENTICATED,
       [Headers.cacheControl]:
         'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
@@ -180,54 +159,37 @@ test.serial(
       [Headers.xCache]: CacheHitHeader.MISS,
     })
 
-    t.like(kvEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
-        {
-          body: originResponseJson,
-          headers: {
-            [Headers.fgScope]: Scope.AUTHENTICATED,
-            [Headers.cacheControl]:
-              'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
-            [Headers.vary]:
-              'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
-            [Headers.fgCache]: CacheHitHeader.MISS,
-            [Headers.xCache]: CacheHitHeader.MISS,
+    const rawResp = await graphql(req, res)
+    t.truthy(rawResp)
+
+    if (rawResp) {
+      t.is(rawResp.status, 200)
+
+      t.deepEqual(await rawResp.json(), {
+        data: {
+          droid: {
+            name: 'R2-D2',
           },
         },
-    })
-    t.like(metadataEntries, {
-      'query-cache::e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec':
-        {
-          expirationTtl: 900,
-          metadata: {
-            createdAt: 1627670799330,
-            expirationTtl: 900,
-          },
-          toJSON: true,
-        },
-    })
+      })
 
-    await graphql(req, res)
-    t.is(res.statusCode, 200)
-
-    headers = Object.fromEntries(res.headers)
-
-    t.like(headers, {
-      [Headers.fgScope]: Scope.AUTHENTICATED,
-      [Headers.vary]:
-        'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
-      'cache-control':
-        'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
-      [Headers.age]: '0',
-      [Headers.fgCache]: CacheHitHeader.HIT,
-      [Headers.xCache]: CacheHitHeader.HIT,
-    })
+      t.like(Object.fromEntries(rawResp.headers), {
+        [Headers.fgScope]: Scope.AUTHENTICATED,
+        [Headers.vary]:
+          'Accept-Encoding, Accept, X-Requested-With, authorization, Origin',
+        'cache-control':
+          'private, max-age=900, stale-if-error=900, stale-while-revalidate=900',
+        [Headers.fgCache]: CacheHitHeader.HIT,
+        [Headers.xCache]: CacheHitHeader.HIT,
+      })
+    }
   },
 )
 
 test.serial(
   'Should return 400 when "query" field is missing in body',
   async (t) => {
+    t.teardown(() => Cache.clear())
     let req = WorktopRequest('POST', {})
     let res = WorktopResponse()
 
@@ -240,12 +202,9 @@ test.serial(
 )
 
 test.serial('Should not cache mutations and proxy them through', async (t) => {
+  t.teardown(() => Cache.clear())
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-
-  const { store: queryStore, metadata } = NewKVNamespace({
-    name: 'QUERY_CACHE',
-  })
 
   let req = WorktopRequest('POST', {
     query: createReview,
@@ -272,17 +231,12 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
   t.deepEqual(res.body, originResponse)
 
   let headers = Object.fromEntries(res.headers)
-  const kvEntries = getKVEntries(queryStore)
-  const metadataEntries = Object.fromEntries(metadata)
 
   t.like(headers, {
     [Headers.fgCache]: CacheHitHeader.PASS,
     [Headers.xCache]: CacheHitHeader.MISS,
     [Headers.cacheControl]: 'public, no-cache, no-store',
   })
-
-  t.deepEqual(kvEntries, {})
-  t.deepEqual(metadataEntries, {})
 
   await graphql(req, res)
   t.is(res.statusCode, 200)
@@ -297,23 +251,20 @@ test.serial('Should not cache mutations and proxy them through', async (t) => {
 })
 
 test.serial('Should pass cache-control header as it is', async (t) => {
+  t.teardown(() => Cache.clear())
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
   // @ts-ignore
-  globalThis.AUTH_DIRECTIVE = 'auth'
-
-  const { store: queryStore, metadata } = NewKVNamespace({
-    name: 'QUERY_CACHE',
-  })
+  globalThis.AUTH_DIRECTIVE = ''
 
   let req = WorktopRequest('POST', {
-    query: simpleHero,
+    query: droidWithArg,
   })
   let res = WorktopResponse()
 
   const originResponseJson = {
     data: {
-      hero: {
+      droid: {
         name: 'R2-D2',
       },
     },
@@ -322,7 +273,7 @@ test.serial('Should pass cache-control header as it is', async (t) => {
 
   const m = mockFetch(originResponseJson, {
     'content-type': 'application/json',
-    'cache-control': 'public, max-age=65',
+    'cache-control': 'public, max-age=60',
   }).mock()
   t.teardown(() => m.revert())
 
@@ -331,57 +282,35 @@ test.serial('Should pass cache-control header as it is', async (t) => {
   t.is(res.statusCode, 200)
   t.deepEqual(res.body, originResponse)
 
-  let headers = Object.fromEntries(res.headers)
-  const kvEntries = getKVEntries(queryStore)
-  const metadataEntries = Object.fromEntries(metadata)
+  const rawResp = await graphql(req, res)
+  t.truthy(rawResp)
 
-  t.is(headers['cache-control'], 'public, max-age=65')
+  if (rawResp) {
+    t.is(rawResp.status, 200)
 
-  t.like(kvEntries, {
-    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
-      {
-        body: originResponseJson,
-        headers: {
-          [Headers.cacheControl]: 'public, max-age=65',
-          [Headers.fgCache]: CacheHitHeader.MISS,
-          [Headers.xCache]: CacheHitHeader.MISS,
+    t.deepEqual(await rawResp.json(), {
+      data: {
+        droid: {
+          name: 'R2-D2',
         },
       },
-  })
-  t.deepEqual(metadataEntries, {
-    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
-      {
-        expirationTtl: 65,
-        metadata: {
-          createdAt: 1627670799330,
-          expirationTtl: 65,
-        },
-        toJSON: true,
-      },
-  })
+    })
 
-  await graphql(req, res)
-  t.is(res.statusCode, 200)
-
-  headers = Object.fromEntries(res.headers)
-
-  t.like(headers, {
-    [Headers.cacheControl]: 'public, max-age=65',
-    [Headers.age]: '0',
-    [Headers.fgCache]: CacheHitHeader.HIT,
-    [Headers.xCache]: CacheHitHeader.HIT,
-  })
+    t.like(Object.fromEntries(rawResp.headers), {
+      [Headers.cacheControl]: 'public, max-age=60',
+      [Headers.fgScope]: Scope.PUBLIC,
+      [Headers.fgCache]: CacheHitHeader.HIT,
+      [Headers.xCache]: CacheHitHeader.HIT,
+    })
+  }
 })
 
 test.serial('Should ignore cache-control from origin', async (t) => {
+  t.teardown(() => Cache.clear())
   // @ts-ignore
   globalThis.IGNORE_ORIGIN_CACHE_HEADERS = '1'
   // @ts-ignore
-  globalThis.AUTH_DIRECTIVE = 'auth'
-
-  const { store: queryStore, metadata } = NewKVNamespace({
-    name: 'QUERY_CACHE',
-  })
+  globalThis.AUTH_DIRECTIVE = ''
 
   let req = WorktopRequest('POST', {
     query: simpleHero,
@@ -409,61 +338,41 @@ test.serial('Should ignore cache-control from origin', async (t) => {
   t.deepEqual(res.body, originResponse)
 
   let headers = Object.fromEntries(res.headers)
-  const kvEntries = getKVEntries(queryStore)
-  const metadataEntries = Object.fromEntries(metadata)
 
   t.is(
     headers['cache-control'],
     'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
   )
 
-  t.like(kvEntries, {
-    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
-      {
-        body: originResponseJson,
-        headers: {
-          [Headers.cacheControl]:
-            'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
-          [Headers.fgCache]: CacheHitHeader.MISS,
-          [Headers.xCache]: CacheHitHeader.MISS,
+  const rawResp = await graphql(req, res)
+  t.truthy(rawResp)
+
+  if (rawResp) {
+    t.is(rawResp.status, 200)
+
+    t.deepEqual(await rawResp.json(), {
+      data: {
+        hero: {
+          name: 'R2-D2',
         },
       },
-  })
-  t.deepEqual(metadataEntries, {
-    'query-cache::993f8cd4f05bd4830617ad3e781cec9d68ac28b92a8a35eb38485702e2ca9348':
-      {
-        expirationTtl: 900,
-        metadata: {
-          createdAt: 1627670799330,
-          expirationTtl: 900,
-        },
-        toJSON: true,
-      },
-  })
+    })
 
-  await graphql(req, res)
-  t.is(res.statusCode, 200)
-
-  headers = Object.fromEntries(res.headers)
-
-  t.like(headers, {
-    [Headers.cacheControl]:
-      'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
-    [Headers.age]: '0',
-    [Headers.fgCache]: CacheHitHeader.HIT,
-    [Headers.xCache]: CacheHitHeader.HIT,
-  })
+    t.like(Object.fromEntries(rawResp.headers), {
+      [Headers.cacheControl]:
+        'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
+      [Headers.fgCache]: CacheHitHeader.HIT,
+      [Headers.xCache]: CacheHitHeader.HIT,
+    })
+  }
 })
 
 test.serial(
   'Should fail when origin does not respond with proper json content-type',
   async (t) => {
+    t.teardown(() => Cache.clear())
     // @ts-ignore
     globalThis.IGNORE_ORIGIN_CACHE_HEADERS = ''
-
-    NewKVNamespace({
-      name: 'QUERY_CACHE',
-    })
 
     let req = WorktopRequest('POST', {
       query: droidWithArg,
