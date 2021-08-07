@@ -64,7 +64,6 @@ export const graphql: Handler = async function (req, res) {
 
   const defaultResponseHeaders: Record<string, string> = {
     [HTTPHeaders.contentType]: 'application/json',
-    [HTTPHeaders.date]: new Date(Date.now()).toUTCString(),
     [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
     [HTTPHeaders.xCache]: CacheHitHeader.MISS,
     [HTTPHeaders.fgCache]: CacheHitHeader.MISS,

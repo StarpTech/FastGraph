@@ -2,7 +2,6 @@ import test from 'ava'
 import { readFileSync } from 'fs'
 import { key } from '../stores/Schema'
 import {
-  getKVEntries,
   mockFetch,
   NewKVNamespace,
   WorktopRequest,
@@ -67,7 +66,6 @@ test.serial(
         'public, max-age=900, stale-if-error=900, stale-while-revalidate=900',
       [Headers.contentSecurityPolicy]: "default-src 'none'",
       [Headers.contentType]: 'application/json',
-      [Headers.date]: 'Fri, 30 Jul 2021 18:46:39 GMT',
       [Headers.fgOriginStatusCode]: '200',
       [Headers.fgOriginStatusText]: 'OK',
       [Headers.fgOriginIgnoreCacheHeaders]: 'false',

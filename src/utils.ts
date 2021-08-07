@@ -14,7 +14,6 @@ export enum Headers {
   setCookie = 'set-cookie',
   contentType = 'content-type',
   cacheControl = 'cache-control',
-  date = 'date',
   xCache = 'x-cache',
   authorization = 'authorization',
   vary = 'vary',
