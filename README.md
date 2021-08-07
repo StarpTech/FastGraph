@@ -121,7 +121,7 @@ Here are some sample response times using FastGraph vs. making requests to the G
 
 ## Performance & Security
 
-All data is stored in the Key-value Store of cloudflare. Cloudflare KV is eventually-consistent and was designed for high-read low-latency use-cases. All data is encrypted at rest with 256-bit AES-GCM.
+Requests are cached with the Cloudflare [Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache). APQ queries are stored in the Key-value Store of cloudflare. All data is encrypted at rest with 256-bit AES-GCM.
 
 Check [How KV works](https://developers.cloudflare.com/workers/learning/how-kv-works) to learn more about it.
 
