@@ -19,9 +19,9 @@ export enum Headers {
   vary = 'vary',
   xRobotsTag = 'x-robots-tag',
   xFrameOptions = 'x-frame-options',
-  Etag = 'etag',
-  Expires = 'expires',
-  LastModified = 'last-modified',
+  etag = 'etag',
+  expires = 'expires',
+  lastModified = 'last-modified',
 
   // CORS
   accessControlAllowCredentials = 'access-control-allow-credentials',

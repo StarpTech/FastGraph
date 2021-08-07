@@ -268,23 +268,19 @@ export const graphql: Handler = async function (req, res) {
         if (cacheControlHeader) {
           headers[HTTPHeaders.cacheControl] = cacheControlHeader
         }
-        const cacheTag = originResponse.headers.get(HTTPHeaders.cfCacheTag)
-        if (cacheTag) {
-          headers[HTTPHeaders.cfCacheTag] = cacheTag
-        }
-        const etag = originResponse.headers.get(HTTPHeaders.Etag)
+        const etag = originResponse.headers.get(HTTPHeaders.etag)
         if (etag) {
-          headers[HTTPHeaders.Etag] = etag
+          headers[HTTPHeaders.etag] = etag
         }
-        const expires = originResponse.headers.get(HTTPHeaders.Expires)
+        const expires = originResponse.headers.get(HTTPHeaders.expires)
         if (expires) {
-          headers[HTTPHeaders.Expires] = expires
+          headers[HTTPHeaders.expires] = expires
         }
         const lastModified = originResponse.headers.get(
-          HTTPHeaders.LastModified,
+          HTTPHeaders.lastModified,
         )
         if (lastModified) {
-          headers[HTTPHeaders.LastModified] = lastModified
+          headers[HTTPHeaders.lastModified] = lastModified
         }
       }
 
@@ -294,6 +290,13 @@ export const graphql: Handler = async function (req, res) {
         // This is only evaluated on enterprise plan and the header is never visible for customers
         if (originalBody.operationName) {
           cacheTags.push(originalBody.operationName)
+        }
+
+        if (ignoreOriginCacheHeaders === false) {
+          const cacheTag = originResponse.headers.get(HTTPHeaders.cfCacheTag)
+          if (cacheTag) {
+            cacheTags.push(...cacheTag.split(','))
+          }
         }
 
         // Alias for `event.waitUntil`

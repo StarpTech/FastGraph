@@ -103,7 +103,7 @@ test.serial(
       t.deepEqual(headers, {
         ...fastGraphHeaders,
         [Headers.cfCacheTag]:
-        'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,foo',
+          'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,foo',
         [Headers.fgScope]: Scope.PUBLIC,
         [Headers.fgCache]: CacheHitHeader.HIT,
         [Headers.xCache]: CacheHitHeader.HIT,
@@ -273,8 +273,12 @@ test.serial('Should pass cache-control header as it is', async (t) => {
   const originResponse = JSON.stringify(originResponseJson)
 
   const m = mockFetch(originResponseJson, {
-    'content-type': 'application/json',
-    'cache-control': 'public, max-age=60',
+    [Headers.contentType]: 'application/json',
+    [Headers.cacheControl]: 'public, max-age=60',
+    [Headers.cfCacheTag]: 'tag',
+    [Headers.etag]: 'etag',
+    [Headers.expires]: 'expires',
+    [Headers.lastModified]: 'lastModified',
   }).mock()
   t.teardown(() => m.revert())
 
@@ -298,7 +302,12 @@ test.serial('Should pass cache-control header as it is', async (t) => {
     })
 
     t.like(Object.fromEntries(rawResp.headers), {
+      [Headers.contentType]: 'application/json',
       [Headers.cacheControl]: 'public, max-age=60',
+      [Headers.cfCacheTag]: 'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,tag',
+      [Headers.etag]: 'etag',
+      [Headers.expires]: 'expires',
+      [Headers.lastModified]: 'lastModified',
       [Headers.fgScope]: Scope.PUBLIC,
       [Headers.fgCache]: CacheHitHeader.HIT,
       [Headers.xCache]: CacheHitHeader.HIT,
