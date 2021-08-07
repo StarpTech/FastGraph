@@ -21,14 +21,14 @@ API.onerror = (_req, _res, status, error) => {
     status,
     statusText,
     headers: {
-      [HTTPHeaders.cacheControl]: 'public, no-cache',
+      [HTTPHeaders.cacheControl]: 'public, no-cache, no-store',
       [HTTPHeaders.contentType]: 'application/json',
     },
   })
 }
 
-API.add('POST', '/', graphql)
-API.add('GET', '/', apq)
+API.add('POST', '/graphql', graphql)
+API.add('GET', '/graphql', apq)
 
 // Attach "fetch" event handler
 // ~> use `Cache` for request-matching, when permitted

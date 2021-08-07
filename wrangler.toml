@@ -2,7 +2,7 @@ name = "fastgraph"
 type = "javascript"
 
 account_id = "1a2a1312f9b14c0611a47d3a511472f7"
-route = "https://gitlab.fastgraph.de/*"
+route = "https://gitlab.fastgraph.de/graphql*"
 zone_id = "9cafb7ea2380c99f3b955baccc064027"
 target_type = "javascript"
 usage_model= "unbound"
