@@ -36,6 +36,7 @@ test.serial(
     globalThis.AUTH_DIRECTIVE = ''
 
     let req = WorktopRequest('POST', {
+      operationName: 'foo',
       query: droidWithArg,
     })
     let res = WorktopResponse()
@@ -101,6 +102,8 @@ test.serial(
 
       t.deepEqual(headers, {
         ...fastGraphHeaders,
+        [Headers.cfCacheTag]:
+        'e89713470c24a9be947d2f942e79661856821366049138599fdbfee8a1258aec,foo',
         [Headers.fgScope]: Scope.PUBLIC,
         [Headers.fgCache]: CacheHitHeader.HIT,
         [Headers.xCache]: CacheHitHeader.HIT,

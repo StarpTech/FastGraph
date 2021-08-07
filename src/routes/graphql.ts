@@ -260,15 +260,42 @@ export const graphql: Handler = async function (req, res) {
         headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       } else if (ignoreOriginCacheHeaders === false) {
+        // supported cache headers
+        // https://developers.cloudflare.com/workers/runtime-apis/cache#headers
         const cacheControlHeader = originResponse.headers.get(
           HTTPHeaders.cacheControl,
         )
         if (cacheControlHeader) {
           headers[HTTPHeaders.cacheControl] = cacheControlHeader
         }
+        const cacheTag = originResponse.headers.get(HTTPHeaders.cfCacheTag)
+        if (cacheTag) {
+          headers[HTTPHeaders.cfCacheTag] = cacheTag
+        }
+        const etag = originResponse.headers.get(HTTPHeaders.Etag)
+        if (etag) {
+          headers[HTTPHeaders.Etag] = etag
+        }
+        const expires = originResponse.headers.get(HTTPHeaders.Expires)
+        if (expires) {
+          headers[HTTPHeaders.Expires] = expires
+        }
+        const lastModified = originResponse.headers.get(
+          HTTPHeaders.LastModified,
+        )
+        if (lastModified) {
+          headers[HTTPHeaders.LastModified] = lastModified
+        }
       }
 
       if (cacheRequest) {
+        const cacheTags = [querySignature]
+        // You can purge your cache by tags
+        // This is only evaluated on enterprise plan and the header is never visible for customers
+        if (originalBody.operationName) {
+          cacheTags.push(originalBody.operationName)
+        }
+
         // Alias for `event.waitUntil`
         // ~> queues background task (does NOT delay response)
         req.extend(
@@ -281,6 +308,7 @@ export const graphql: Handler = async function (req, res) {
                 ...headers,
                 [HTTPHeaders.fgCache]: CacheHitHeader.HIT,
                 [HTTPHeaders.xCache]: CacheHitHeader.HIT,
+                [HTTPHeaders.cfCacheTag]: cacheTags.join(','),
               },
             }),
           ),
