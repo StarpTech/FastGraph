@@ -91,7 +91,7 @@ Set the variables in your `wrangler.toml`.
 curl --request POST \
   -v --compressed \
   -o /dev/null -sS \
-  --url https://fastgraph.starptech.workers.dev/graphql \
+  --url https://gitlab.fastgraph.de/graphql \
   --header 'Accept-Encoding: gzip' \
   --header 'Content-Type: application/json' \
   --data '{"query":"{\n  projects {\n    edges {\n      node {\n        id\n      }\n    }\n  }\n}\n"}' \
