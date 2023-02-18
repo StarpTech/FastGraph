@@ -1,23 +1,23 @@
 name = "fastgraph"
 type = "javascript"
 
-account_id = "1a2a1312f9b14c0611a47d3a511472f7"
-route = "https://gitlab.fastgraph.de/graphql*"
+account_id = "771c00eaa86cd480f93dc6f41b51398f"
+route = "https://api-test-original.lemune.com/graphql*"
 zone_id = "9cafb7ea2380c99f3b955baccc064027"
 target_type = "javascript"
 usage_model= "unbound"
 kv_namespaces = [
-         { binding = "APQ_CACHE", id = "9c2e58947cad40a0ac8f0f3340181887", preview_id = "9c2e58947cad40a0ac8f0f3340181887" },
-         { binding = "SCHEMA", id = "3778588748ff4f9dab10291b3baccaba", preview_id = "3778588748ff4f9dab10291b3baccaba" }
+         { binding = "lemune-stg", id = "c2a12580f1fb4c38a414bf785918d5e2", preview_id = "c2a12580f1fb4c38a414bf785918d5e2" },
+         { binding = "lemune-stg-schema", id = "df933d5df2af49069ab21274bcac0d2c", preview_id = "df933d5df2af49069ab21274bcac0d2c" }
 ]
 
 [vars]
-ORIGIN_URL = "https://gitlab.com/api/graphql"
+ORIGIN_URL = "https://api-test-original.lemune.com/graphql/"
 SCOPE = "PUBLIC"
 IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 SWR = "30"
-PRIVATE_TYPES = ""
+PRIVATE_TYPES = "App, User, Group, Order, Stock, Address, Channel, Invoice, Payment, Webhook, AppToken, Checkout, GiftCard, OrderLine, Warehouse, OrderEvent, ExportEvent, Fulfillment, Transaction, AppExtension, CheckoutLine, PreorderData, GiftCardEvent, OrderDiscount, PaymentSource, DigitalContent, UserPermission, SaleChannelListing, ProductChannelListing, VoucherChannelListing, SaleTranslatableContent, CollectionChannelListing, VoucherTranslatableContent, ProductVariantChannelListing, ShippingMethodTranslatableContent"
 AUTH_DIRECTIVE = ""
 APQ_TTL = "30"
 
