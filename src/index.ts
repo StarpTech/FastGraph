@@ -27,8 +27,8 @@ API.onerror = (_req, _res, status, error) => {
   })
 }
 
-API.add('POST', '/graphql', graphql)
-API.add('GET', '/graphql', apq)
+API.add('POST', '/graphql/', graphql)
+API.add('GET', '/graphql/', apq)
 
 // Attach "fetch" event handler
 // ~> use `Cache` for request-matching, when permitted
