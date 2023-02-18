@@ -17,7 +17,7 @@ SCOPE = "PUBLIC"
 IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 SWR = "30"
-PRIVATE_TYPES = "App, User, Group, Order, Stock, Address, Channel, Invoice, Payment, Webhook, AppToken, Checkout, GiftCard, OrderLine, Warehouse, OrderEvent, ExportEvent, Fulfillment, Transaction, AppExtension, CheckoutLine, PreorderData, GiftCardEvent, OrderDiscount, PaymentSource, DigitalContent, UserPermission, SaleChannelListing, ProductChannelListing, VoucherChannelListing, SaleTranslatableContent, CollectionChannelListing, VoucherTranslatableContent, ProductVariantChannelListing, ShippingMethodTranslatableContent, userOrders, accountAddresses"
+PRIVATE_TYPES = ""
 AUTH_DIRECTIVE = ""
 APQ_TTL = "30"
 
