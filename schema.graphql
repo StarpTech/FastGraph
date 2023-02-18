@@ -6151,6 +6151,8 @@ type Query {
   user(id: ID, email: String): User
   _entities(representations: [_Any]): [_Entity]
   _service: _Service
+  userOrders(first: Int, after: String): OrderCountableConnection
+  accountAddresses: Address
 }
 
 type ReducedRate {
