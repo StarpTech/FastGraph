@@ -7,8 +7,8 @@ zone_id = "cb3bb6975444b93de2d7bbf0e31902c8"
 target_type = "javascript"
 usage_model= "bundled"
 kv_namespaces = [
-         { binding = "lemune-stg", id = "c2a12580f1fb4c38a414bf785918d5e2", preview_id = "c2a12580f1fb4c38a414bf785918d5e2" },
-         { binding = "lemune-stg-schema", id = "df933d5df2af49069ab21274bcac0d2c", preview_id = "df933d5df2af49069ab21274bcac0d2c" }
+         { binding = "lemune-stg", id = "c2a12580f1fb4c38a414bf785918d5e2" },
+         { binding = "lemune-stg-schema", id = "df933d5df2af49069ab21274bcac0d2c" }
 ]
 
 [vars]
