@@ -2,13 +2,13 @@ name = "fastgraph"
 type = "javascript"
 
 account_id = "771c00eaa86cd480f93dc6f41b51398f"
-route = "https://api-test-original.lemune.com/graphql/"
+route = "https://api-test.lemune.com/graphql/"
 zone_id = "cb3bb6975444b93de2d7bbf0e31902c8"
 target_type = "javascript"
 usage_model= "bundled"
 kv_namespaces = [
-         { binding = "lemune-stg", id = "c2a12580f1fb4c38a414bf785918d5e2" },
-         { binding = "lemune-stg-schema", id = "df933d5df2af49069ab21274bcac0d2c" }
+         { binding = "APQ_CACHE", id = "b55e3bd6a8bc4298b443b219a59469e6", preview=  "b55e3bd6a8bc4298b443b219a59469e6"},
+         { binding = "SCHEMA", id = "673daed11f53492fb2cc24732c1b11ef", preview = "673daed11f53492fb2cc24732c1b11ef" }
 ]
 
 [vars]
