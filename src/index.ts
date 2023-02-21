@@ -27,6 +27,7 @@ API.onerror = (_req, _res, status, error) => {
   })
 }
 
+API.add('OPTIONS', '/graphql/', graphql)
 API.add('POST', '/graphql/', graphql)
 API.add('GET', '/graphql/', apq)
 
