@@ -52,7 +52,7 @@ export type GraphQLRequest = {
 
 export const graphql: Handler = async function (req, res) {
   const originalBody = await req.body.json<GraphQLRequest>()
-
+  const variables = JSON.stringify(originalBody.variables)
   if (!originalBody.query) {
     return res.send(400, {
       error: 'Request has no "query" field.',
@@ -132,6 +132,7 @@ export const graphql: Handler = async function (req, res) {
     isMutationRequest === false &&
     (hasPrivateTypes || scope === Scope.AUTHENTICATED || authRequired)
 
+  
   /**
    *  In case of the query will return user specific data the response
    *  is cached user specific based on the Authorization header
@@ -147,12 +148,12 @@ export const graphql: Handler = async function (req, res) {
     let cacheKey = ''
 
     if (isPrivateAndCacheable) {
-      querySignature = await SHA256(authorizationHeader + content)
-      defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
+        querySignature = await SHA256(authorizationHeader + content + variables)
+        defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
     } else {
-      querySignature = await SHA256(content)
+        querySignature = await SHA256(content + variables)
     }
-
+    
     const cacheUrl = new URL(req.url)
 
     if (originalBody.operationName) {
@@ -162,13 +163,10 @@ export const graphql: Handler = async function (req, res) {
     cacheKey += querySignature
 
     cacheUrl.pathname = cacheUrl.pathname + cacheKey
-
     cacheRequest = new Request(cacheUrl.toString(), {
       headers: req.headers,
       method: 'GET',
     })
-
-    const cache = caches.default
 
     let response = await cache.match(cacheRequest)
 
@@ -242,6 +240,7 @@ export const graphql: Handler = async function (req, res) {
 
   const isOriginResponseCacheable =
     isResponseCachable(originResponse) || ignoreOriginCacheHeaders
+
   const isCacheable =
     (isMutationRequest === false && isOriginResponseCacheable) ||
     (isOriginResponseCacheable && isPrivateAndCacheable)
@@ -264,7 +263,7 @@ export const graphql: Handler = async function (req, res) {
         headers[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
         headers[
           HTTPHeaders.cacheControl
-        ] = `private, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`
+        ] = `public, max-age=${defaultMaxAgeInSeconds}, stale-if-error=${swr}, stale-while-revalidate=${swr}`
         headers[HTTPHeaders.vary] =
           'Accept-Encoding, Accept, X-Requested-With, authorization, Origin'
       } else if (ignoreOriginCacheHeaders === false) {
@@ -325,7 +324,6 @@ export const graphql: Handler = async function (req, res) {
           ),
         )
       }
-
       return res.send(200, originResult, headers)
     }
 

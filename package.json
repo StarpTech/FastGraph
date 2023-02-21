@@ -5,7 +5,7 @@
   "description": "fastgraph",
   "license": "MIT",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "miniflare dist/worker.production.js --watch",
     "build": "webpack",
     "deploy": "NODE_ENV=production wrangler publish",
     "test": "npm run unit",

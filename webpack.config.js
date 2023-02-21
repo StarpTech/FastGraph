@@ -4,9 +4,11 @@ const TerserPlugin = require('terser-webpack-plugin')
 const mode = process.env.NODE_ENV || 'production'
 
 module.exports = {
+  devtool: "source-map",
   output: {
     filename: `worker.${mode}.js`,
     path: path.join(__dirname, 'dist'),
+    devtoolModuleFilenameTemplate: "[absolute-resource-path]"
   },
   mode,
   optimization: {

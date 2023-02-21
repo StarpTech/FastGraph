@@ -7,8 +7,8 @@ zone_id = "cb3bb6975444b93de2d7bbf0e31902c8"
 target_type = "javascript"
 usage_model= "bundled"
 kv_namespaces = [
-         { binding = "APQ_CACHE", id = "b55e3bd6a8bc4298b443b219a59469e6", preview=  "b55e3bd6a8bc4298b443b219a59469e6"},
-         { binding = "SCHEMA", id = "673daed11f53492fb2cc24732c1b11ef", preview = "673daed11f53492fb2cc24732c1b11ef" }
+         { binding = "APQ_CACHE", id = "b55e3bd6a8bc4298b443b219a59469e6", preview_id=  "b55e3bd6a8bc4298b443b219a59469e6"},
+         { binding = "SCHEMA", id = "673daed11f53492fb2cc24732c1b11ef", preview_id = "673daed11f53492fb2cc24732c1b11ef" }
 ]
 
 [vars]
@@ -17,7 +17,7 @@ SCOPE = "AUTHENTICATED"
 IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 SWR = "30"
-PRIVATE_TYPES = "User"
+PRIVATE_TYPES = ""
 AUTH_DIRECTIVE = ""
 APQ_TTL = "30"
 
