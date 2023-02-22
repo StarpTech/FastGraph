@@ -152,7 +152,6 @@ export const graphql: Handler = async function (req, res) {
     if (isPrivateAndCacheable) {
         querySignature = await SHA256(authorizationHeader + content + variables)
         defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
-        console.log('PRIVATE '+originalBody.operationName)
     } else {
         querySignature = await SHA256(content + variables)
     }
