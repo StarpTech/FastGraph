@@ -13,11 +13,12 @@ kv_namespaces = [
 
 [vars]
 ORIGIN_URL = "https://api-test-original.lemune.com/graphql/"
-SCOPE = "AUTHENTICATED"
+SCOPE = "PUBLIC"
 IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 SWR = "30"
-PRIVATE_TYPES = ""
+PRIVATE_TYPES = "userOrders"
+GENERIC_TYPES = ""
 AUTH_DIRECTIVE = ""
 APQ_TTL = "30"
 

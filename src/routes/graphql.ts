@@ -21,6 +21,7 @@ import { GraphQLSchema, parse } from 'graphql'
 declare const ORIGIN_URL: string
 declare const DEFAULT_TTL: string
 declare const PRIVATE_TYPES: string
+declare const GENERIC_TYPES: string
 declare const SCOPE: string
 declare const IGNORE_ORIGIN_CACHE_HEADERS: string
 declare const AUTH_DIRECTIVE: string
@@ -30,6 +31,7 @@ const originUrl = ORIGIN_URL
 const defaultMaxAgeInSeconds = parseInt(DEFAULT_TTL)
 const swr = parseInt(SWR)
 const privateTypes = PRIVATE_TYPES ? PRIVATE_TYPES.split(',') : null
+const genericTypes = GENERIC_TYPES ? GENERIC_TYPES.split(',') : null
 const scope: Scope = SCOPE as Scope
 
 /**
@@ -150,6 +152,7 @@ export const graphql: Handler = async function (req, res) {
     if (isPrivateAndCacheable) {
         querySignature = await SHA256(authorizationHeader + content + variables)
         defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
+        console.log('PRIVATE '+originalBody.operationName)
     } else {
         querySignature = await SHA256(content + variables)
     }

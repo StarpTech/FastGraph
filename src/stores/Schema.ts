@@ -7,5 +7,5 @@ declare const SCHEMA: KV.Namespace
 export const key = `schema::latest`
 
 export function find() {
-  return DB.read<string>(SCHEMA, key, { type: 'text' })
+    return DB.read<string>(SCHEMA, key, { type: 'text' })
 }
