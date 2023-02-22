@@ -86,6 +86,7 @@ export const graphql: Handler = async function (req, res) {
   let isMutationRequest = false
   let authRequired = false
   let content = originalBody.query
+  let operationName = originalBody.operationName!
   let inspectSchema = !!AUTH_DIRECTIVE || !!privateTypes
 
   try {
@@ -146,16 +147,23 @@ export const graphql: Handler = async function (req, res) {
   /**
    * Check if query is in the cache
    */
-  if (isMutationRequest === false) {
+  if (isMutationRequest === false && genericTypes != null && genericTypes.includes(operationName)) {
     let cacheKey = ''
 
+    /**
     if (isPrivateAndCacheable) {
         querySignature = await SHA256(authorizationHeader + content + variables)
         defaultResponseHeaders[HTTPHeaders.fgScope] = Scope.AUTHENTICATED
     } else {
         querySignature = await SHA256(content + variables)
+    } 
+    */
+    if (operationName == 'home') {
+        querySignature = await SHA256(authorizationHeader + content + variables)
+    } else {
+        querySignature = await SHA256(content + variables)
     }
-    
+
     const cacheUrl = new URL(req.url)
 
     if (originalBody.operationName) {
