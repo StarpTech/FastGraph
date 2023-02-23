@@ -18,7 +18,7 @@ IGNORE_ORIGIN_CACHE_HEADERS = "1"
 DEFAULT_TTL = "900"
 SWR = "30"
 PRIVATE_TYPES = ""
-GENERIC_TYPES = "productsList,productsCountByChannel,Home,categories,promotedProductsList,productDetails"
+GENERIC_TYPES = "productsList,productsCountByChannel,Home,categories,promotedProductsList,productDetails,getProductsForSubcategoriesWithPromoted"
 AUTH_DIRECTIVE = ""
 APQ_TTL = "30"
 
